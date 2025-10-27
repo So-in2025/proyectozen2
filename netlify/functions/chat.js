@@ -1,5 +1,5 @@
 // /netlify/functions/chat.js
-import { GoogleGenAI, Type } from "@google/genai";
+const { GoogleGenAI, Type } = require("@google/genai");
 
 // --- JSON SCHEMA FOR RECOMMENDATIONS ---
 const recommendationSchema = {
@@ -11,7 +11,7 @@ const recommendationSchema = {
         },
         services: {
             type: Type.ARRAY,
-            description: "Array de objetos de servicio recomendados.",
+            description: "Array de objetos de servicio recomendado.",
             items: {
                 type: Type.OBJECT,
                 properties: {
@@ -42,7 +42,7 @@ const recommendationSchema = {
 };
 
 // --- HANDLER ---
-export const handler = async (event) => {
+exports.handler = async (event) => {
   // CRÍTICO: Verificar la clave API aquí antes de hacer cualquier cosa.
   if (!process.env.GEMINI_APIKEY) {
     console.error("FATAL: La variable de entorno GEMINI_APIKEY no está definida.");
