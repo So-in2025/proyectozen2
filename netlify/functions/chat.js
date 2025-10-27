@@ -2,12 +2,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 // --- CONFIGURATION ---
-// Fix: Use process.env.API_KEY as per the coding guidelines.
-if (!process.env.API_KEY) {
-  console.error("FATAL: API_KEY environment variable not set.");
-}
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-const GEMINI_MODEL = "gemini-2.5-flash";
+const GEMINI_MODEL = "gemini-2.5-flash"; // This can remain at module level as it's a constant.
 
 // --- JSON SCHEMA FOR RECOMMENDATIONS ---
 const recommendationSchema = {
@@ -51,7 +46,20 @@ const recommendationSchema = {
 
 
 // --- HANDLER ---
+// Fix: The handler must be exported at the top level.
 export const handler = async (event) => {
+  // Fix: Check for API_KEY inside the handler function.
+  if (!process.env.API_KEY) {
+    console.error("FATAL: API_KEY environment variable not set.");
+    return {
+        statusCode: 500,
+        body: JSON.stringify({ error: true, message: "Server function error: API_KEY environment variable is not set." }),
+    };
+  }
+  // Fix: Initialize GoogleGenAI inside the handler, after checking for API_KEY.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
