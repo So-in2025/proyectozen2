@@ -1,5 +1,5 @@
 [build]
-  publish = "dist" # O el directorio donde se encuentre tu index.html y otros assets estáticos si no es la raíz.
+  publish = "." # Corregido a punto, ya que index.html y assets están en la raíz.
   functions = "netlify/functions"
 
 [[plugins]]
