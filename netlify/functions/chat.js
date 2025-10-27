@@ -4,11 +4,11 @@ import fs from 'fs';
 import path from 'path';
 
 // --- CONFIGURATION ---
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-if (!GEMINI_API_KEY) {
-  console.error("FATAL: GEMINI_API_KEY environment variable not set.");
+// Fix: Use process.env.API_KEY as per the coding guidelines.
+if (!process.env.API_KEY) {
+  console.error("FATAL: API_KEY environment variable not set.");
 }
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 const GEMINI_MODEL = "gemini-2.5-flash";
 
 // --- JSON SCHEMA FOR RECOMMENDATIONS ---
