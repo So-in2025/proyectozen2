@@ -1,4 +1,0 @@
-/*
-  This file is deprecated. The single source of truth is /pricing.json at the project root.
-  This file is kept to avoid breaking potential build caches, but it should not be used.
-*/

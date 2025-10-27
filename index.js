@@ -1,1 +1,0 @@
-// This file is obsolete. The application logic has been modularized and moved to the /js directory. The entry point is now /js/main.js.
