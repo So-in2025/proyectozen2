@@ -4,6 +4,20 @@ import * as dom from './dom.js';
 import { getState, setCustomServices } from './state.js';
 import { updateSelectedItems } from './app.js';
 
+// --- MODAL DE BIENVENIDA ---
+export function showWelcomeModal() {
+    const modal = document.getElementById('welcomeModal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+export function closeWelcomeModal() {
+    const modal = document.getElementById('welcomeModal');
+    if (modal) modal.classList.add('hidden');
+    localStorage.setItem('welcomeModalDismissed', 'true');
+}
+
+
+// --- OTROS MODALES ---
 export function showNotification(type, title, message) {
     dom.notificationTitle.textContent = title;
     dom.notificationMessage.innerHTML = message;
@@ -57,6 +71,7 @@ export function removeCustomService(id) {
 
 // Asociar funciones a los botones de los modales en el scope global
 // para que los `onclick` del HTML funcionen.
+window.closeWelcomeModal = closeWelcomeModal;
 window.closeNotificationModal = closeNotificationModal;
 window.closeCustomServiceModal = closeCustomServiceModal;
 window.addCustomServiceToSelection = addCustomServiceToSelection;

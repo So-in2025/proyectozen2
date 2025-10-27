@@ -18,8 +18,7 @@ window.handleTTSButtonClick = (buttonElement) => {
 
     // Siempre detenemos cualquier audio en curso. Esto simplifica el estado.
     ttsManager.stop();
-    shouldAutoplay = false; // La interacción manual siempre desactiva el siguiente autoplay
-
+    
     // Si no estábamos reproduciendo ESTE audio específico, lo iniciamos.
     if (!isCurrentlyPlayingThis) {
         ttsManager.speak(text, buttonElement);
@@ -28,7 +27,7 @@ window.handleTTSButtonClick = (buttonElement) => {
 
 let voices = [];
 let selectedVoiceURI = localStorage.getItem('zenAssistantVoiceURI');
-let shouldAutoplay = true;
+let shouldAutoplay = localStorage.getItem('zenTtsAutoplay') === 'true';
 
 const ttsManager = {
     isPlaying: false,
@@ -129,10 +128,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function createVoiceSelector() {
         const selectorContainer = document.createElement('div');
         selectorContainer.id = 'voice-selector-container';
-        selectorContainer.className = 'mb-2 p-2 bg-slate-800 rounded-md flex items-center gap-2';
+        selectorContainer.className = 'mb-2 p-2 bg-slate-800 rounded-md flex items-center flex-wrap gap-2';
         selectorContainer.innerHTML = `
-            <label for="voice-selector" class="text-sm font-bold text-slate-300">Voz del Asistente:</label>
-            <select id="voice-selector" class="w-full styled-input text-sm text-cyan-300"></select>
+            <div class="flex items-center gap-2 flex-grow">
+              <label for="voice-selector" class="text-sm font-bold text-slate-300">Voz:</label>
+              <select id="voice-selector" class="w-full styled-input text-sm text-cyan-300"></select>
+            </div>
+            <div class="flex items-center gap-2">
+                <label for="autoplay-toggle" class="text-sm font-bold text-slate-300">Autoplay Voz:</label>
+                <input type="checkbox" id="autoplay-toggle" class="custom-checkbox">
+            </div>
         `;
         chatMessagesContainer.parentNode.insertBefore(selectorContainer, chatMessagesContainer);
 
@@ -141,6 +146,14 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedVoiceURI = e.target.value;
             localStorage.setItem('zenAssistantVoiceURI', selectedVoiceURI);
             ttsManager.stop();
+        });
+
+        const autoplayToggle = document.getElementById('autoplay-toggle');
+        autoplayToggle.checked = shouldAutoplay;
+        autoplayToggle.addEventListener('change', (e) => {
+            shouldAutoplay = e.target.checked;
+            localStorage.setItem('zenTtsAutoplay', shouldAutoplay);
+            if (!shouldAutoplay) ttsManager.stop();
         });
     }
 
@@ -340,7 +353,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function sendMessage() {
         ttsManager.stop();
-        shouldAutoplay = true;
         const userMessage = chatInput.value.trim();
         if (!userMessage || isSending) return;
 

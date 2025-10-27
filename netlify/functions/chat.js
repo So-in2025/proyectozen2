@@ -88,7 +88,8 @@ export const handler = async (event) => {
         config: { systemInstruction: classificationSystemPrompt }
     });
     
-    const intent = classificationResponse.text.toUpperCase().trim().replace(/['"]+/g, '');
+    // FIX: Use response.text and handle potential empty responses
+    const intent = classificationResponse.text?.toUpperCase().trim().replace(/['"]+/g, '') || 'TEXTO';
 
     // --- STEP 2: GENERATE RESPONSE BASED ON INTENT ---
     let finalResponse;
@@ -123,6 +124,7 @@ export const handler = async (event) => {
         });
     }
     
+    // FIX: Use response.text for cleaner response extraction
     const responseText = finalResponse.text;
     const updatedHistory = [...historyWithNewMessage, { role: 'model', parts: [{ text: responseText }] }];
 

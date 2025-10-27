@@ -5,8 +5,9 @@ import * as state from './state.js';
 import { loadPricingData, loadTasks, saveTasks } from './data.js';
 import { resetForm, handleAddTask, clearAllSelections, toggleSelectionMode, updateSelectedItems, deleteTask, editTask } from './app.js';
 import { handleServiceSelection, handlePlanSelection } from './points.js';
-import { removeCustomService } from './modals.js';
+import { removeCustomService, showWelcomeModal, showNotification } from './modals.js';
 import { filterServices } from './ui.js';
+import { initiatePresentation } from './presentation.js';
 
 // --- EVENT LISTENERS PRINCIPALES ---
 
@@ -14,6 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPricingData();
     loadTasks();
     resetForm();
+    
+    // Muestra el modal de bienvenida si es la primera visita (diferente al splash)
+    if (!localStorage.getItem('welcomeModalDismissed')) {
+        // Se podría activar desde un botón dentro de la app si se desea
+        // showWelcomeModal(); 
+    }
 });
 
 dom.serviceTypeSelect.addEventListener('change', (e) => toggleSelectionMode(e.target.value));
@@ -21,6 +28,9 @@ dom.clearSelectionsBtn.addEventListener('click', clearAllSelections);
 dom.addTaskButton.addEventListener('click', handleAddTask);
 dom.marginPercentageInput.addEventListener('input', updateSelectedItems);
 dom.serviceSearchInput.addEventListener('input', (e) => filterServices(e.target.value));
+
+// Botón para iniciar presentación
+document.getElementById('presentProposalBtn').addEventListener('click', initiatePresentation);
 
 
 dom.clearAllTasksBtn.addEventListener('click', () => {
@@ -48,15 +58,12 @@ dom.appContainer.addEventListener('change', (e) => {
                 document.querySelector('input[name="selectionGroup"]:checked').checked = false;
             }
         }
-        // La línea `target.checked = true;` ha sido eliminada.
-        // Ahora el navegador maneja el estado de selección/deselección.
         updateSelectedItems();
     } else if (target.matches('input[name="monthlyPlanSelection"]')) {
         if (document.querySelector('input[name="selectionGroup"]:checked')) {
             document.querySelector('input[name="selectionGroup"]:checked').checked = false;
         }
         document.querySelectorAll('input[data-type="standard"]:checked').forEach(cb => cb.checked = false);
-        // La línea `target.checked = true;` ha sido eliminada.
         handlePlanSelection(target.value);
         updateSelectedItems();
     } else if (target.matches('input[name^="plan-service-"]')) {
