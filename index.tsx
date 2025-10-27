@@ -3,7 +3,7 @@
 // This file merges the logic from all previous .js files into a single module.
 //
 
-// --- STATE MANAGEMENT (from state.js) ---
+// --- STATE MANAGEMENT ---
 const COMBO_DISCOUNT = 0.10;
 let state = {
     allServices: {} as any,
@@ -30,7 +30,7 @@ const setSelectedPlanId = (id: string | null) => { state.selectedPlanId = id; };
 const setSelectedPlanServices = (services: any[]) => { state.selectedPlanServices = services; };
 
 
-// --- DOM REFERENCES (from dom.js) ---
+// --- DOM REFERENCES ---
 const dom = {
     appContainer: document.getElementById('appContainer'),
     serviceTypeSelect: document.getElementById('serviceType'),
@@ -71,7 +71,7 @@ const dom = {
 };
 
 
-// --- MODAL CONTROLS (from modals.js) ---
+// --- MODAL CONTROLS ---
 function showNotification(type: 'success' | 'error' | 'info', title: string, message: string) {
     dom.notificationTitle!.textContent = title;
     dom.notificationMessage!.innerHTML = message;
@@ -123,7 +123,7 @@ function removeCustomService(id: string) {
 (window as any).showPdfOptionsModal = showPdfOptionsModal;
 
 
-// --- UI RENDERING (from ui.js) ---
+// --- UI RENDERING ---
 function createServiceItemHTML(svc: any, type: string, name: string, isExclusive: boolean, categoryKey: string | null = null) {
     const pointCostHTML = svc.pointCost ? `<span class="font-bold text-yellow-400 text-xs">${svc.pointCost} Pts</span>` : '';
     return `
@@ -141,6 +141,10 @@ function createServiceItemHTML(svc: any, type: string, name: string, isExclusive
 }
 function initializeServiceCheckboxes() {
     const { allServices } = getState();
+    if (!allServices || Object.keys(allServices).length === 0) {
+        dom.servicesSelectionDiv!.innerHTML = '<p class="text-slate-400 text-center col-span-full">El catálogo de servicios no está disponible.</p>';
+        return;
+    }
     dom.servicesSelectionDiv!.innerHTML = Object.keys(allServices).map(key => {
         const category = allServices[key];
         const itemsHTML = category.items.map((svc: any) => createServiceItemHTML(svc, category.isExclusive ? 'package' : 'standard', category.isExclusive ? 'selectionGroup' : `item-${svc.id}`, category.isExclusive, key)).join('');
@@ -180,7 +184,7 @@ function renderTasksDashboard() {
             } else if (task.plan) {
                 const planInfo = monthlyPlans.find(p => p.id == task.plan.id);
                 const remainingText = task.plan.remainingPoints > 0 ? `<br><span class="text-xs text-yellow-400">Sobrante: ${task.plan.remainingPoints} Pts</span>` : '';
-                serviceList = `<span class="text-sm text-cyan-300 font-medium">Plan: ${planInfo.name}</span>${remainingText}`;
+                serviceList = `<span class="text-sm text-cyan-300 font-medium">Plan: ${planInfo?.name || 'Desconocido'}</span>${remainingText}`;
             } else {
                 serviceList = `<span class="text-sm text-slate-300">${task.services.length} ítems individuales</span>`;
             }
@@ -236,7 +240,7 @@ function filterServices(searchTerm: string) {
 }
 
 
-// --- CORE APP LOGIC (from app.js & points.js) ---
+// --- CORE APP LOGIC ---
 function updateSummary() {
     let totalDevCost = 0;
     const { selectedServices } = getState();
@@ -471,7 +475,7 @@ function deleteTask(index: number) {
 }
 
 
-// --- DATA HANDLING (from data.js) ---
+// --- DATA HANDLING ---
 async function loadPricingData() {
     try {
         const resp = await fetch('pricing.json?v=' + new Date().getTime());
@@ -479,11 +483,18 @@ async function loadPricingData() {
         const data = await resp.json();
         setAllServices(data.allServices || {});
         setMonthlyPlans(data.monthlyPlans || []);
-        dom.messageContainer!.innerHTML = '';
+        if (dom.messageContainer) dom.messageContainer.innerHTML = '';
         initializeUI();
     } catch (err: any) {
         console.error('Error Crítico al cargar pricing.json:', err.message);
-        dom.appContainer!.innerHTML = `<div class="col-span-full bg-red-900/50 border border-red-700 text-red-200 p-6 rounded-xl"><h2 class="text-2xl font-bold mb-2">Error Crítico de Carga</h2><p>La aplicación no puede iniciarse porque no se pudo cargar o procesar el archivo <strong>pricing.json</strong>.</p><p class="mt-2">Por favor, asegúrate de que el archivo se encuentre en el mismo directorio que este HTML y que su contenido sea un JSON válido.</p></div>`;
+        // NON-DESTRUCTIVE ERROR HANDLING
+        showNotification(
+            'error', 
+            'Error Crítico de Carga', 
+            'La aplicación no pudo cargar el catálogo de servicios (pricing.json). Algunas funciones estarán deshabilitadas. Por favor, asegúrate de que el archivo exista y sea válido.'
+        );
+        // Initialize UI with empty data to prevent crashing
+        initializeUI();
     }
 }
 function loadTasks() {
@@ -501,7 +512,7 @@ function saveTasks() {
     renderTasksDashboard();
 }
 
-// --- PDF GENERATION (from pdf.js) ---
+// --- PDF GENERATION ---
 async function generatePdf(isForClient: boolean) {
     const logoFile = (dom.pdfLogoInput as HTMLInputElement).files?.[0];
     const reader = new FileReader();
@@ -694,7 +705,7 @@ async function generatePdf(isForClient: boolean) {
 (window as any).generatePdf = generatePdf;
 
 
-// --- PRESENTATION MODE LOGIC (from presentation.js) ---
+// --- PRESENTATION MODE LOGIC ---
 let slides: string[] = [];
 let currentSlideIndex = 0;
 function findServiceByIdForPresentation(id: string) {
@@ -725,7 +736,6 @@ function showSlide(index: number) {
     updateNav();
 }
 function closePresentation() {
-    dom.pdfOptionsModal!.classList.add('hidden');
     document.getElementById('presentationModal')!.classList.add('hidden');
     document.body.style.overflow = 'auto';
 }
@@ -738,7 +748,7 @@ function createSlides(brandingInfo: any) {
             ${brandingInfo.logo ? `<img src="${brandingInfo.logo}" alt="Logo" class="max-h-24 mx-auto mb-8">` : ''}
             <h1 class="text-5xl font-extrabold accent-color mb-4" style="font-family: 'Orbitron', sans-serif;">Propuesta de Desarrollo Web</h1>
             <p class="text-lg text-slate-300 mt-6 max-w-2xl mx-auto">Preparado para <strong>${brandingInfo.client.split('\n')[0]}</strong> por <strong>${brandingInfo.reseller.split('\n')[0]}</strong>.</p>
-            <button id="showInfoModalBtn" class="mt-8 bg-slate-700 text-white font-bold py-3 px-6 rounded-lg hover:bg-slate-600 transition">Conoce Nuestro Modelo de Trabajo</button>
+            <button id="openInfoModalBtn" class="mt-8 bg-slate-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-slate-600 transition">Conoce Nuestro Modelo de Trabajo</button>
         </div>
     `);
     tasks.forEach(task => {
@@ -748,52 +758,17 @@ function createSlides(brandingInfo: any) {
             servicesHtml = `<h3 class="text-2xl font-bold text-cyan-300 mb-2">${pkg.name}</h3><p class="text-slate-300 max-w-2xl">${pkg.description}</p>`;
         } else if (task.plan) {
             const plan = monthlyPlans.find(p => p.id == task.plan.id);
-            servicesHtml = `
-                <h3 class="text-2xl font-bold text-cyan-300 mb-2">${plan.name}</h3>
-                <p class="text-slate-300 mb-6 max-w-2xl">${plan.description}</p>
-                <h4 class="text-xl font-semibold text-white mb-3">Servicios Incluidos:</h4>
-                <ul class="list-disc list-inside text-slate-300">${task.plan.selectedServiceIds.map((id: string) => `<li>${findServiceByIdForPresentation(id).name}</li>`).join('')}</ul>`;
+            servicesHtml = `<h3 class="text-2xl font-bold text-cyan-300 mb-2">${plan.name}</h3><p class="text-slate-300 mb-6 max-w-2xl">${plan.description}</p><h4 class="text-xl font-semibold text-white mb-3">Servicios Incluidos:</h4><ul class="list-disc list-inside text-slate-300">${task.plan.selectedServiceIds.map((id:string) => `<li>${findServiceByIdForPresentation(id).name}</li>`).join('')}</ul>`;
         } else {
-            servicesHtml = `
-                <h3 class="text-xl font-semibold text-white mb-4">Servicios Incluidos:</h3>
-                <ul class="text-left max-w-md mx-auto space-y-2">${task.services.map((s: any) => `<li class="p-3 bg-slate-800 rounded-lg text-slate-200">${s.type === 'custom' ? '⭐' : '✔️'} ${s.name}</li>`).join('')}</ul>`;
+            servicesHtml = `<h3 class="text-xl font-semibold text-white mb-4">Servicios Incluidos:</h3><ul class="text-left max-w-md mx-auto space-y-2">${task.services.map((s:any) => `<li class="p-3 bg-slate-800 rounded-lg text-slate-200">${s.type === 'custom' ? '⭐' : '✔️'} ${s.name}</li>`).join('')}</ul>`;
         }
-        generatedSlides.push(`
-            <div class="max-w-4xl w-full">
-                <p class="text-lg text-slate-400">Propuesta para: ${task.clientName}</p>
-                <h2 class="text-4xl font-bold text-white mt-1 mb-8">${task.webName}</h2>
-                ${servicesHtml}
-                <div class="mt-10 pt-6 border-t border-slate-700">
-                    <p class="text-xl text-slate-200">Inversión Total del Proyecto:</p>
-                    <p class="text-5xl font-extrabold text-green-400 mt-2">$${task.totalClient.toFixed(2)} USD</p>
-                    <p class="text-sm text-slate-500 mt-1">${task.type === 'mensual' ? 'por mes' : 'pago único'}</p>
-                </div>
-            </div>
-        `);
+        generatedSlides.push(`<div class="max-w-4xl w-full"><p class="text-lg text-slate-400">Propuesta para: ${task.clientName}</p><h2 class="text-4xl font-bold text-white mt-1 mb-8">${task.webName}</h2>${servicesHtml}<div class="mt-10 pt-6 border-t border-slate-700"><p class="text-xl text-slate-200">Inversión Total del Proyecto:</p><p class="text-5xl font-extrabold text-green-400 mt-2">$${task.totalClient.toFixed(2)} USD</p><p class="text-sm text-slate-500 mt-1">${task.type === 'mensual' ? 'por mes' : 'pago único'}</p></div></div>`);
     });
     if (tasks.length > 1) {
-        generatedSlides.push(`
-            <div class="max-w-3xl w-full">
-                <h2 class="text-4xl font-bold text-white mb-8">Resumen de Inversión</h2>
-                <div class="space-y-4 w-full">${tasks.map(t => `<div class="flex justify-between items-center p-4 bg-slate-800 rounded-lg text-lg"><span class="text-slate-200">${t.webName}</span><span class="font-bold text-cyan-300">$${t.totalClient.toFixed(2)}</span></div>`).join('')}</div>
-                <div class="mt-10 pt-6 border-t-2 border-green-400">
-                    <p class="text-xl text-slate-200">Inversión Total Global:</p>
-                    <p class="text-6xl font-extrabold text-green-400 mt-2">$${grandTotal.toFixed(2)} USD</p>
-                </div>
-            </div>
-        `);
+        generatedSlides.push(`<div class="max-w-3xl w-full"><h2 class="text-4xl font-bold text-white mb-8">Resumen de Inversión</h2><div class="space-y-4 w-full">${tasks.map(t => `<div class="flex justify-between items-center p-4 bg-slate-800 rounded-lg text-lg"><span class="text-slate-200">${t.webName}</span><span class="font-bold text-cyan-300">$${t.totalClient.toFixed(2)}</span></div>`).join('')}</div><div class="mt-10 pt-6 border-t-2 border-green-400"><p class="text-xl text-slate-200">Inversión Total Global:</p><p class="text-6xl font-extrabold text-green-400 mt-2">$${grandTotal.toFixed(2)} USD</p></div></div>`);
     }
     if (brandingInfo.terms) {
-        generatedSlides.push(`
-            <div class="max-w-4xl w-full text-left">
-                <h2 class="text-3xl font-bold text-white mb-6 text-center">Siguientes Pasos</h2>
-                <div class="text-slate-300 whitespace-pre-line text-sm leading-relaxed p-4 border border-slate-700 rounded-lg bg-slate-800/50">${brandingInfo.terms}</div>
-                <div class="mt-8 text-center">
-                    <p class="text-lg text-slate-200 mb-2">Preparado por:</p>
-                    <p class="text-md text-slate-400 whitespace-pre-line">${brandingInfo.reseller}</p>
-                </div>
-            </div>
-        `);
+        generatedSlides.push(`<div class="max-w-4xl w-full text-left"><h2 class="text-3xl font-bold text-white mb-6 text-center">Términos y Condiciones</h2><div class="text-slate-300 whitespace-pre-line text-sm leading-relaxed">${brandingInfo.terms}</div></div>`);
     }
     return generatedSlides;
 }
@@ -804,12 +779,10 @@ async function startPresentation() {
         if (logoFile) {
             reader.onload = (event) => resolve(event.target!.result);
             reader.readAsDataURL(logoFile);
-        } else {
-            resolve(null);
-        }
+        } else { resolve(null); }
     });
     const brandingInfo = {
-        logo: await logoPromise,
+        logo: await logoPromise as string | null,
         reseller: (dom.pdfResellerInfo as HTMLTextAreaElement).value || 'No especificado',
         client: (dom.pdfClientInfo as HTMLTextAreaElement).value || 'No especificado',
         terms: (dom.pdfTerms as HTMLTextAreaElement).value || ''
@@ -818,6 +791,12 @@ async function startPresentation() {
     if (slides.length === 0) return;
     const contentDiv = document.getElementById('presentationContent');
     contentDiv!.innerHTML = slides.map((slideHTML, index) => `<div class="presentation-slide ${index === 0 ? 'active' : ''}">${slideHTML}</div>`).join('');
+    
+    // Add listener for the info modal button AFTER slides are in the DOM
+    document.getElementById('openInfoModalBtn')?.addEventListener('click', () => {
+        document.getElementById('infoModal')!.classList.remove('hidden');
+    });
+
     closePdfOptionsModal();
     document.getElementById('presentationModal')!.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -825,121 +804,154 @@ async function startPresentation() {
     updateNav();
 }
 function initiatePresentation() {
-    if (getState().tasks.length === 0) {
-        return showNotification('info', 'Vacío', 'Debes guardar al menos una propuesta para poder presentarla.');
-    }
+    const { tasks } = getState();
+    if (tasks.length === 0) return showNotification('info', 'Vacío', 'Debes guardar al menos una propuesta para poder presentarla.');
     showPdfOptionsModal();
 }
 
-// --- MAIN APP INITIALIZATION ---
-function initializeApp() {
-    // --- INFO MODAL & TTS LOGIC ---
-    { // Scoping block for info modal logic
-        const infoModal = document.getElementById('infoModal');
-        const closeBtn = document.getElementById('infoModalCloseBtn');
-        const playBtn = document.getElementById('playInfoNarrationBtn') as HTMLButtonElement;
+// --- CHATBOT LOGIC ---
+function initChat() {
+    const chatMessagesContainer = document.getElementById('chat-messages') as HTMLElement;
+    const chatInput = document.getElementById('chat-input') as HTMLInputElement;
+    const sendChatBtn = document.getElementById('chat-send-btn') as HTMLButtonElement;
+    let chatHistory: any[] = [];
+    let isSending = false;
 
-        const synth = window.speechSynthesis;
-        let narrationQueue: HTMLElement[] = [];
-        let currentlySpeaking = false;
-        let lastHighlightedPoint: HTMLElement | null = null;
+    function addMessageToChat(message: string, role: 'user' | 'model') {
+        const sender = role === 'user' ? 'user' : 'ai';
+        const wrapper = document.createElement('div');
+        wrapper.className = 'chat-message flex flex-col my-2';
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble p-3 rounded-lg max-w-[85%] relative';
+        let finalHTML = message.replace(/\n/g, '<br>');
 
-        function stopNarration() {
-            if (synth.speaking) {
-                synth.cancel();
-            }
-            currentlySpeaking = false;
-            playBtn!.textContent = '▶️ Escuchar Presentación';
-            playBtn!.classList.remove('playing');
-            document.querySelectorAll('.speaking').forEach(el => el.classList.remove('speaking'));
-        }
-
-        function processNarrationQueue() {
-            if (currentlySpeaking || narrationQueue.length === 0) {
-                if (!currentlySpeaking) { // Finished queue
-                    if (lastHighlightedPoint) lastHighlightedPoint.classList.add('highlighted');
-                    playBtn!.textContent = '▶️ Escuchar de Nuevo';
+        if (sender === 'ai') {
+             try {
+                const jsonResponse = JSON.parse(message);
+                if (jsonResponse.introduction && Array.isArray(jsonResponse.services)) {
+                    let messageText = `${jsonResponse.introduction.replace(/\n/g, '<br>')}`;
+                     if (jsonResponse.closing) messageText += `<br><br>${jsonResponse.closing.replace(/\n/g, '<br>')}`;
+                    finalHTML = messageText;
                 }
-                return;
-            }
-
-            currentlySpeaking = true;
-            const elementToSpeak = narrationQueue.shift()!;
-            const textToSpeak = elementToSpeak.textContent || '';
-            const parentPoint = elementToSpeak.closest<HTMLElement>('.business-pillar, .workflow-step');
-            
-            if (parentPoint && parentPoint !== lastHighlightedPoint) {
-                if (lastHighlightedPoint) lastHighlightedPoint.classList.remove('highlighted');
-                parentPoint.classList.add('highlighted');
-                parentPoint.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                lastHighlightedPoint = parentPoint;
-            }
-
-            const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            const voices = synth.getVoices();
-            utterance.voice = voices.find(v => v.lang.startsWith('es')) || voices[0];
-            utterance.lang = 'es-ES';
-            utterance.rate = 1.1;
-            utterance.pitch = 1;
-
-            utterance.onstart = () => elementToSpeak.classList.add('speaking');
-            
-            utterance.onend = () => {
-                elementToSpeak.classList.remove('speaking');
-                currentlySpeaking = false;
-                setTimeout(processNarrationQueue, 150);
-            };
-            
-            utterance.onerror = (e) => {
-                console.error("Error al reproducir voz:", e);
-                currentlySpeaking = false;
-                stopNarration();
-            };
-
-            synth.speak(utterance);
+            } catch (e) { /* Not JSON */ }
         }
 
-        function startNarration() {
-            if (synth.speaking) {
-                stopNarration();
-                return;
-            }
-            
-            narrationQueue = Array.from(infoModal!.querySelectorAll('.vocal-highlight'));
-            document.querySelectorAll('.business-pillar, .workflow-step').forEach(el => el.classList.remove('highlighted'));
-            lastHighlightedPoint = null;
-            playBtn!.textContent = '⏹️ Detener';
-            playBtn!.classList.add('playing');
-            processNarrationQueue();
+        if (sender === 'user') {
+            wrapper.classList.add('items-end');
+            bubble.classList.add('bg-cyan-500', 'text-slate-900', 'rounded-br-none');
+        } else {
+            wrapper.classList.add('items-start');
+            bubble.classList.add('bg-slate-700', 'text-slate-50', 'rounded-bl-none');
         }
-        
-        // Use a delegated event listener on a static parent (body or a modal container)
-        document.body.addEventListener('click', (e) => {
-            const target = e.target as HTMLElement;
-            if (target.id === 'showInfoModalBtn') {
-                infoModal?.classList.remove('hidden');
-            }
-        });
-
-        closeBtn?.addEventListener('click', () => {
-            infoModal?.classList.add('hidden');
-            stopNarration();
-        });
-
-        playBtn?.addEventListener('click', startNarration);
+        bubble.innerHTML = finalHTML;
+        wrapper.appendChild(bubble);
+        chatMessagesContainer.appendChild(wrapper);
+        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
     }
 
-    // --- ORIGINAL APP INIT LOGIC ---
-    loadPricingData();
+    async function sendMessage() {
+        const userMessage = chatInput.value.trim();
+        if (!userMessage || isSending) return;
+        isSending = true;
+        sendChatBtn.disabled = true;
+        addMessageToChat(userMessage, 'user');
+        const payload = { userMessage: userMessage, history: chatHistory };
+        chatHistory.push({ role: 'user', parts: [{ text: userMessage }] }); 
+        chatInput.value = '';
+        chatInput.focus();
+        // toggleTypingIndicator(true); // Placeholder for typing indicator
+
+        try {
+            const response = await fetch('/.netlify/functions/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error(`Error de red: ${response.status}`);
+            const data = await response.json();
+            chatHistory = data.history; 
+            addMessageToChat(data.response, 'model');
+        } catch (error) {
+            console.error("Error al enviar mensaje:", error);
+            addMessageToChat(`Lo siento, hubo un error de conexión con el asistente.`, 'model');
+        } finally {
+            isSending = false;
+            sendChatBtn.disabled = false;
+            // toggleTypingIndicator(false);
+        }
+    }
+    
+    const welcomeMessage = '¡Hola! Soy Zen Assistant. Describe el proyecto de tu cliente y te ayudaré a seleccionar los servicios.';
+    addMessageToChat(welcomeMessage, 'model');
+    chatHistory.push({ role: 'model', parts: [{ text: welcomeMessage }] });
+
+    sendChatBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') { event.preventDefault(); sendMessage(); }
+    });
+}
+
+// --- INFO MODAL & TTS LOGIC ---
+function playInfoNarration() {
+    const synth = window.speechSynthesis;
+    if (synth.speaking) {
+        synth.cancel();
+        return;
+    }
+
+    let narrationQueue = Array.from(document.querySelectorAll('.vocal-highlight'));
+    let lastHighlightedPoint: HTMLElement | null = null;
+    
+    function processNarrationQueue() {
+        if (narrationQueue.length === 0) {
+            if (lastHighlightedPoint) lastHighlightedPoint.classList.add('highlighted');
+            return;
+        }
+
+        const elementToSpeak = narrationQueue.shift() as HTMLElement;
+        const textToSpeak = elementToSpeak.textContent || '';
+        const parentPoint = elementToSpeak.closest('.business-pillar, .workflow-step') as HTMLElement;
+
+        if (parentPoint && parentPoint !== lastHighlightedPoint) {
+            if (lastHighlightedPoint) lastHighlightedPoint.classList.remove('highlighted');
+            parentPoint.classList.add('highlighted');
+            parentPoint.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            lastHighlightedPoint = parentPoint;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        utterance.lang = 'es-US';
+        utterance.rate = 1.1;
+        utterance.onstart = () => elementToSpeak.classList.add('speaking');
+        utterance.onend = () => {
+            elementToSpeak.classList.remove('speaking');
+            setTimeout(processNarrationQueue, 100);
+        };
+        utterance.onerror = (e) => {
+            console.error("Error en TTS:", e);
+            document.querySelectorAll('.business-pillar, .workflow-step').forEach(el => el.classList.add('highlighted'));
+        };
+        synth.speak(utterance);
+    }
+    processNarrationQueue();
+}
+
+
+// --- APP INITIALIZATION ---
+async function initializeApp() {
+    await loadPricingData();
     loadTasks();
     resetForm();
-    dom.serviceTypeSelect!.addEventListener('change', (e) => toggleSelectionMode((e.target as HTMLSelectElement).value));
-    dom.clearSelectionsBtn!.addEventListener('click', clearAllSelections);
-    dom.addTaskButton!.addEventListener('click', handleAddTask);
-    dom.marginPercentageInput!.addEventListener('input', updateSelectedItems);
-    dom.serviceSearchInput!.addEventListener('input', (e) => filterServices((e.target as HTMLInputElement).value));
-    document.getElementById('presentProposalBtn')!.addEventListener('click', initiatePresentation);
-    dom.clearAllTasksBtn!.addEventListener('click', () => {
+    initChat();
+    
+    // Main Event Listeners
+    (dom.serviceTypeSelect as HTMLElement).addEventListener('change', (e) => toggleSelectionMode((e.target as HTMLSelectElement).value));
+    (dom.clearSelectionsBtn as HTMLElement).addEventListener('click', clearAllSelections);
+    (dom.addTaskButton as HTMLElement).addEventListener('click', handleAddTask);
+    (dom.marginPercentageInput as HTMLElement).addEventListener('input', updateSelectedItems);
+    (dom.serviceSearchInput as HTMLElement).addEventListener('input', (e) => filterServices((e.target as HTMLInputElement).value));
+    (document.getElementById('presentProposalBtn') as HTMLElement).addEventListener('click', initiatePresentation);
+    (dom.clearAllTasksBtn as HTMLElement).addEventListener('click', () => {
         if (getState().tasks.length > 0 && confirm("¿Estás seguro de que deseas borrar TODAS las tareas?")) {
             setTasks([]);
             saveTasks();
@@ -947,169 +959,12 @@ function initializeApp() {
             showNotification('info', 'Tareas Borradas', 'Todas las tareas han sido eliminadas.');
         }
     });
-    dom.appContainer!.addEventListener('change', (e) => {
-        const target = e.target as HTMLElement;
-        if (target.matches('input[name="selectionGroup"], input[data-type="standard"]')) {
-            if (document.querySelector('input[name="monthlyPlanSelection"]:checked')) clearAllSelections();
-            if ((target as HTMLInputElement).name === 'selectionGroup') document.querySelectorAll<HTMLInputElement>('input[data-type="standard"]').forEach(cb => cb.checked = false);
-            else if (document.querySelector('input[name="selectionGroup"]:checked')) (document.querySelector('input[name="selectionGroup"]:checked') as HTMLInputElement).checked = false;
-            updateSelectedItems();
-        } else if (target.matches('input[name="monthlyPlanSelection"]')) {
-            if (document.querySelector('input[name="selectionGroup"]:checked')) (document.querySelector('input[name="selectionGroup"]:checked') as HTMLInputElement).checked = false;
-            document.querySelectorAll<HTMLInputElement>('input[data-type="standard"]:checked').forEach(cb => cb.checked = false);
-            handlePlanSelection((target as HTMLInputElement).value);
-            updateSelectedItems();
-        } else if (target.matches('input[name^="plan-service-"]')) {
-            handleServiceSelection(target as HTMLInputElement, (target as HTMLInputElement).checked);
-        }
-    });
-    dom.appContainer!.addEventListener('click', (e) => {
-        const card = (e.target as HTMLElement).closest('.item-card');
-        if (card && !(e.target as HTMLElement).matches('input')) {
-            const input = card.querySelector<HTMLInputElement>('input');
-            if (input && !input.disabled) input.click();
-        }
-        const actionButton = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
-        if (actionButton) {
-            const { action, index, id } = actionButton.dataset;
-            if (action === 'edit') editTask(parseInt(index!));
-            if (action === 'delete') deleteTask(parseInt(index!));
-            if (action === 'remove-custom') removeCustomService(id!);
-        }
-    });
 
-    // --- START OF AI CHAT FRONTEND ---
-    { 
-        const chatMessagesContainer = document.getElementById('chat-messages');
-        const chatInput = document.getElementById('chat-input');
-        const sendChatBtn = document.getElementById('chat-send-btn');
-        const summaryCard = document.getElementById('summaryCard');
-        if (!chatMessagesContainer || !chatInput || !sendChatBtn) {
-            console.error("Chat elements not found, AI Assistant will be disabled.");
-        } else {
-            let chatHistory: any[] = [];
-            let isSending = false;
-            
-            const ttsManager = { isPlaying: false, stop: function() { window.speechSynthesis.cancel(); this.isPlaying = false; document.querySelectorAll('.tts-btn.playing').forEach(btn => { (btn as HTMLElement).innerHTML = '▶️ Escuchar'; btn.classList.remove('playing'); });}, speak: function(text: string, buttonElement: HTMLElement) { if (this.isPlaying) return; const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'es-ES'; utterance.rate = 1.05; utterance.pitch = 1; utterance.onstart = () => { this.isPlaying = true; if (buttonElement) { buttonElement.innerHTML = '⏹️ Detener'; buttonElement.classList.add('playing'); }}; utterance.onend = () => { this.isPlaying = false; if (buttonElement) { buttonElement.innerHTML = '▶️ Escuchar'; buttonElement.classList.remove('playing'); }}; window.speechSynthesis.speak(utterance);}};
-            (window as any).handleTTSButtonClick = (buttonElement: HTMLElement) => { const text = buttonElement.dataset.text!; const isCurrentlyPlayingThis = ttsManager.isPlaying && buttonElement.classList.contains('playing'); ttsManager.stop(); if (!isCurrentlyPlayingThis) { ttsManager.speak(text, buttonElement); }};
-            window.addEventListener('beforeunload', () => ttsManager.stop());
-
-            function findServiceById(id: string) {
-                const plan = getState().monthlyPlans.find(p => p.id == id);
-                if (plan) return { type: 'plan', item: plan };
-                const allStandardServices = Object.values(getState().allServices).flatMap((category: any) => category.items);
-                const service = (allStandardServices as any[]).find(s => s.id === id);
-                if (service) {
-                    const isPackage = Object.values(getState().allServices).some((cat: any) => cat.isExclusive && cat.items.some((i: any) => i.id === id));
-                    return { type: isPackage ? 'package' : (service.pointCost ? 'plan-service' : 'standard'), item: service };
-                }
-                return null;
-            };
-
-            function addMessageToChat(message: string, role: 'user' | 'ai' | 'model') {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'chat-message flex flex-col my-2';
-                const bubble = document.createElement('div');
-                bubble.className = 'chat-bubble p-3 rounded-lg max-w-[85%] relative';
-                let finalHTML = message.replace(/\n/g, '<br>');
-
-                if (role === 'ai' || role === 'model') {
-                    try {
-                        const json = JSON.parse(message);
-                        let text = `${json.introduction.replace(/\n/g, '<br>')}`;
-                        const applyAllButton = `<button data-action="apply-proposal" data-services='${JSON.stringify(json.services)}' class="apply-proposal-btn bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition mt-2 w-full sm:w-auto">✔️ Aplicar Propuesta</button>`;
-                        text += `<div class="mt-3 pt-3 border-t border-slate-600"><p class="text-sm font-bold text-purple-300 mb-2">Acciones Rápidas:</p><div class="flex flex-wrap gap-2">${applyAllButton}</div></div>`;
-                        if (json.client_questions?.length > 0) {
-                            text += `<div class="mt-3 pt-3 border-t border-slate-600"><p class="text-sm font-bold text-yellow-300 mb-2">Pregúntale a tu Cliente:</p><div class="flex flex-col items-start gap-2">${json.client_questions.map((q: string) => `<button onclick='(document.getElementById("chat-input") as HTMLInputElement).value = "Mi cliente respondió a \\'${q.replace(/"/g, '&quot;').replace(/'/g, '&#39;')}\\', y dijo que..."; document.getElementById("chat-input")!.focus();' class="suggested-question-btn text-left text-sm bg-slate-800 text-slate-300 py-2 px-3 rounded-lg hover:bg-slate-600 transition w-full">❔ ${q}</button>`).join('')}</div></div>`;
-                        }
-                        if (json.sales_pitch) {
-                            const pitchId = `pitch-${Date.now()}`;
-                            text += `<div class="mt-3 pt-3 border-t border-slate-600"><p class="text-sm font-bold text-green-300 mb-2">Argumento de Venta:</p><div class="p-3 bg-slate-800 rounded-lg border border-slate-600 relative"><p id="${pitchId}" class="text-slate-200 text-sm">${json.sales_pitch.replace(/\n/g, '<br>')}</p><button onclick="navigator.clipboard.writeText(document.getElementById('${pitchId}')!.innerText); this.innerText='¡Copiado!';" class="absolute top-2 right-2 text-xs bg-slate-900 text-cyan-300 font-bold py-1 px-2 rounded hover:bg-cyan-800 transition">Copiar</button></div></div>`;
-                        }
-                        finalHTML = text;
-                    } catch(e) {/* it's plain text */}
-                    
-                    const escapedTextToSpeak = message.replace(/'/g, '&#39;').replace(/"/g, '&quot;');
-                    finalHTML += `<button onclick='(window as any).handleTTSButtonClick(this)' data-text='${escapedTextToSpeak}' class="tts-btn absolute bottom-2 right-2 text-xs bg-slate-900 text-cyan-300 font-bold py-1 px-2 rounded hover:bg-cyan-800 transition">▶️ Escuchar</button>`;
-                }
-                if (role === 'user') {
-                    wrapper.classList.add('items-end');
-                    bubble.classList.add('bg-cyan-500', 'text-slate-900', 'rounded-br-none');
-                } else {
-                    wrapper.classList.add('items-start');
-                    bubble.classList.add('bg-slate-700', 'text-slate-50', 'rounded-bl-none');
-                }
-                bubble.innerHTML = finalHTML;
-                wrapper.appendChild(bubble);
-                chatMessagesContainer!.appendChild(wrapper);
-                chatMessagesContainer!.scrollTop = chatMessagesContainer!.scrollHeight;
-            }
-
-            async function sendMessage() {
-                ttsManager.stop();
-                const userMessage = (chatInput as HTMLInputElement).value.trim();
-                if (!userMessage || isSending) return;
-                isSending = true; (sendChatBtn as HTMLButtonElement).disabled = true;
-                addMessageToChat(userMessage, 'user');
-                chatHistory.push({ role: 'user', parts: [{ text: userMessage }] });
-                (chatInput as HTMLInputElement).value = '';
-                toggleTypingIndicator(true);
-                try {
-                    const response = await fetch('/.netlify/functions/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userMessage, history: chatHistory }) });
-                    if (!response.ok) { const errorData = await response.json().catch(() => ({})); throw new Error(errorData.message || `Error de red: ${response.status}`); }
-                    const data = await response.json();
-                    chatHistory = data.history;
-                    addMessageToChat(data.response, 'ai');
-                } catch (error: any) {
-                    addMessageToChat(`Lo siento, hubo un error de conexión con el asistente: ${error.message}`, 'ai');
-                } finally {
-                    isSending = false; (sendChatBtn as HTMLButtonElement).disabled = false; toggleTypingIndicator(false);
-                }
-            }
-            function toggleTypingIndicator(show: boolean) {
-                let indicator = document.getElementById('typing-indicator');
-                if (show) { if (!indicator) { indicator = document.createElement('div'); indicator.id = 'typing-indicator'; indicator.className = 'chat-message flex items-start my-2'; indicator.innerHTML = `<div class="chat-bubble bg-slate-700 rounded-bl-none p-3 flex items-center space-x-1"><span class="h-2 w-2 bg-slate-400 rounded-full animate-bounce"></span><span class="h-2 w-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.2s;"></span><span class="h-2 w-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.4s;"></span></div>`; chatMessagesContainer!.appendChild(indicator); } }
-                else if (indicator) indicator.remove();
-            }
-            function applyAiProposal(services: any[]) {
-                clearAllSelections();
-                const pkg = services.find(s => findServiceById(s.id)?.type === 'package');
-                const plan = services.find(s => findServiceById(s.id)?.type === 'plan');
-                if (pkg) { toggleSelectionMode('puntual'); (document.getElementById(`package-${pkg.id}`) as HTMLElement)?.click(); }
-                else if (plan) { toggleSelectionMode('mensual'); (document.getElementById(`plan-${plan.id}`) as HTMLElement)?.click(); setTimeout(() => { services.forEach(s => { if (s.id !== plan.id) (document.getElementById(`plan-service-${s.id}`) as HTMLElement)?.click(); }); }, 100); }
-                else { toggleSelectionMode('puntual'); services.forEach(s => (document.getElementById(`standard-${s.id}`) as HTMLElement)?.click()); }
-                showNotification('success', 'Propuesta Aplicada', 'Servicios sugeridos por IA seleccionados.');
-                summaryCard!.scrollIntoView({ behavior: 'smooth' });
-            }
-            chatMessagesContainer!.addEventListener('click', (e) => {
-                const target = (e.target as HTMLElement).closest<HTMLElement>('[data-action="apply-proposal"]');
-                if (target) applyAiProposal(JSON.parse(target.dataset.services!));
-            });
-            sendChatBtn!.addEventListener('click', sendMessage);
-            chatInput!.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }});
-            
-            chatHistory = [];
-            const welcomeMessage = '¡Hola! Soy Zen Assistant. Describe el proyecto de tu cliente y te ayudaré a seleccionar los servicios.';
-            addMessageToChat(welcomeMessage, 'ai');
-            chatHistory.push({ role: 'model', parts: [{ text: welcomeMessage }] });
-        }
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const splashScreen = document.getElementById('splashScreen');
-    const mainAppContainer = document.getElementById('mainAppContainer');
-    const enterAppBtn = document.getElementById('enterAppBtn');
-
-    // Presentation Mode Listeners (attached once)
-    document.getElementById('startPresentationBtn')!.addEventListener('click', startPresentation);
-    document.getElementById('presentationCloseBtn')!.addEventListener('click', closePresentation);
-    document.getElementById('prevSlideBtn')!.addEventListener('click', () => {
-        if (currentSlideIndex > 0) showSlide(currentSlideIndex - 1);
-    });
-    document.getElementById('nextSlideBtn')!.addEventListener('click', () => {
-        if (currentSlideIndex < slides.length - 1) showSlide(currentSlideIndex + 1);
-    });
+    // Presentation Modal Listeners
+    (document.getElementById('startPresentationBtn') as HTMLElement).addEventListener('click', startPresentation);
+    (document.getElementById('presentationCloseBtn') as HTMLElement).addEventListener('click', closePresentation);
+    (document.getElementById('prevSlideBtn') as HTMLElement).addEventListener('click', () => { if (currentSlideIndex > 0) showSlide(currentSlideIndex - 1); });
+    (document.getElementById('nextSlideBtn') as HTMLElement).addEventListener('click', () => { if (currentSlideIndex < slides.length - 1) showSlide(currentSlideIndex + 1); });
     document.addEventListener('keydown', (e) => {
         if (!document.getElementById('presentationModal')!.classList.contains('hidden')) {
             if (e.key === 'ArrowRight' && currentSlideIndex < slides.length - 1) showSlide(currentSlideIndex + 1);
@@ -1118,21 +973,66 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    if (sessionStorage.getItem('splashShown')) {
-        splashScreen!.style.display = 'none';
-        mainAppContainer!.classList.remove('hidden');
-        initializeApp(); // Initialize app directly
+    // Info Modal Listeners
+    (document.getElementById('infoModalCloseBtn') as HTMLElement).addEventListener('click', () => {
+        window.speechSynthesis.cancel();
+        (document.getElementById('infoModal') as HTMLElement).classList.add('hidden');
+    });
+    (document.getElementById('playInfoNarrationBtn') as HTMLElement).addEventListener('click', playInfoNarration);
+
+    // Event Delegation
+    (dom.appContainer as HTMLElement).addEventListener('change', (e) => {
+        const target = e.target as HTMLInputElement;
+        if (target.matches('input[name="selectionGroup"], input[data-type="standard"]')) {
+            if (document.querySelector('input[name="monthlyPlanSelection"]:checked')) clearAllSelections();
+            if (target.name === 'selectionGroup') document.querySelectorAll('input[data-type="standard"]').forEach(cb => (cb as HTMLInputElement).checked = false);
+            else if (document.querySelector('input[name="selectionGroup"]:checked')) (document.querySelector('input[name="selectionGroup"]:checked') as HTMLInputElement).checked = false;
+            updateSelectedItems();
+        } else if (target.matches('input[name="monthlyPlanSelection"]')) {
+            if (document.querySelector('input[name="selectionGroup"]:checked')) (document.querySelector('input[name="selectionGroup"]:checked') as HTMLInputElement).checked = false;
+            document.querySelectorAll('input[data-type="standard"]:checked').forEach(cb => (cb as HTMLInputElement).checked = false);
+            handlePlanSelection(target.value);
+            updateSelectedItems();
+        } else if (target.matches('input[name^="plan-service-"]')) {
+            handleServiceSelection(target, target.checked);
+        }
+    });
+    (dom.appContainer as HTMLElement).addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const card = target.closest('.item-card');
+        if (card && !target.matches('input')) {
+            const input = card.querySelector('input');
+            if (input && !input.disabled) input.click();
+        }
+        const actionButton = target.closest('[data-action]') as HTMLElement;
+        if (actionButton) {
+            const { action, index, id } = actionButton.dataset;
+            if (action === 'edit' && index) editTask(parseInt(index));
+            if (action === 'delete' && index) deleteTask(parseInt(index));
+            if (action === 'remove-custom' && id) removeCustomService(id);
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const splashScreen = document.getElementById('splashScreen') as HTMLElement;
+    const enterAppBtn = document.getElementById('enterAppBtn') as HTMLElement;
+    const mainAppContainer = document.getElementById('mainAppContainer') as HTMLElement;
+
+    if (sessionStorage.getItem('splashSeen')) {
+        splashScreen.style.display = 'none';
+        mainAppContainer.classList.remove('hidden');
+        initializeApp();
     } else {
-        enterAppBtn!.addEventListener('click', () => {
-            sessionStorage.setItem('splashShown', 'true');
-            splashScreen!.classList.add('opacity-0');
-            
-            splashScreen!.addEventListener('transitionend', () => {
-                splashScreen!.style.display = 'none';
-            }, { once: true });
-            
-            mainAppContainer!.classList.remove('hidden');
-            initializeApp(); // Initialize app after splash
-        });
+        enterAppBtn.addEventListener('click', () => {
+            splashScreen.style.opacity = '0';
+            splashScreen.style.pointerEvents = 'none';
+            setTimeout(() => {
+                splashScreen.style.display = 'none';
+            }, 700);
+            mainAppContainer.classList.remove('hidden');
+            sessionStorage.setItem('splashSeen', 'true');
+            initializeApp();
+        }, { once: true });
     }
 });
