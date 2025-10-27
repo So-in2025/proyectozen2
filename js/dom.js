@@ -1,18 +1,17 @@
 // --- DOM REFERENCES ---
 
-// A single object to hold all references to DOM elements.
-// It will be populated by the initializeDomReferences function after the DOM is ready.
+// A single object to hold all references to DOM elements for the main application.
+// It will be populated by the initializeDomReferences function after the splash screen is dismissed.
 export const dom = {};
 
 /**
- * Finds all DOM elements and populates the dom object.
- * Must be called after DOMContentLoaded.
+ * Finds all DOM elements for the main application and populates the dom object.
+ * Must be called after the main application container is visible.
  */
 export function initializeDomReferences() {
     // Main containers
     dom.appContainer = document.getElementById('appContainer');
     dom.mainAppContainer = document.getElementById('mainAppContainer');
-    dom.splashScreen = document.getElementById('splashScreen');
 
     // Service selection
     dom.serviceTypeSelect = document.getElementById('serviceType');
@@ -63,8 +62,4 @@ export function initializeDomReferences() {
     dom.pdfResellerInfo = document.getElementById('pdfResellerInfo');
     dom.pdfClientInfo = document.getElementById('pdfClientInfo');
     dom.pdfTerms = document.getElementById('pdfTerms');
-
-    // Splash Screen Buttons
-    dom.enterAppBtn = document.getElementById('enterAppBtn');
-    dom.showInfoModelBtn = document.getElementById('showInfoModelBtn');
 }

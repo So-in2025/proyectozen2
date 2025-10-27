@@ -1,7 +1,5 @@
 import { dom } from './dom.js';
 import { getState, setCustomServices } from './state.js';
-import { updateSelectedItems } from './appLogic.js';
-import { showNotification } from './modals.js';
 
 // --- MODAL CONTROLS ---
 

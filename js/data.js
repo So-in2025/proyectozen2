@@ -1,5 +1,4 @@
 import { setAllServices, setMonthlyPlans, setTasks, getState } from './state.js';
-import { initializeUI, renderTasksDashboard } from './ui.js';
 import { showNotification } from './modals.js';
 
 /**
@@ -15,7 +14,7 @@ export async function loadPricingData() {
         const data = await resp.json();
         setAllServices(data.allServices || {});
         setMonthlyPlans(data.monthlyPlans || []);
-        initializeUI();
+        return true; // Indicate success
     } catch (err) {
         console.error('Error Crítico al cargar pricing.json:', err.message);
         showNotification(
@@ -23,15 +22,16 @@ export async function loadPricingData() {
             'Error Crítico de Carga', 
             'La aplicación no pudo cargar el catálogo de servicios (pricing.json). Algunas funciones estarán deshabilitadas. Por favor, asegúrate de que el archivo exista y sea válido.'
         );
-        // Initialize UI with empty data to prevent other parts from crashing
+        // Initialize with empty data to prevent other parts from crashing
         setAllServices({});
         setMonthlyPlans([]);
-        initializeUI();
+        return false; // Indicate failure
     }
 }
 
 /**
- * Loads saved tasks from LocalStorage.
+ * Loads saved tasks from LocalStorage into the state.
+ * Does NOT render the UI.
  */
 export function loadTasks() {
     try {
@@ -43,11 +43,11 @@ export function loadTasks() {
         console.error("Error al cargar tareas:", e);
         setTasks([]); // Reset to empty array on error
     }
-    renderTasksDashboard();
 }
 
 /**
- * Saves the current tasks list to LocalStorage.
+ * Saves the current tasks list from the state to LocalStorage.
+ * Does NOT render the UI.
  */
 export function saveTasks() {
     try {
@@ -56,5 +56,4 @@ export function saveTasks() {
         console.error("Error al guardar tareas:", e);
         showNotification('error', 'Error al Guardar', 'No se pudieron guardar las tareas en el almacenamiento local.');
     }
-    renderTasksDashboard();
 }

@@ -1,8 +1,94 @@
 import { dom } from './dom.js';
 import { COMBO_DISCOUNT, getState, setCustomServices, setEditingIndex, setSelectedPlanId, setSelectedPlanServices, setSelectedServices, setTasks, setTotalPlanPoints, setUsedPlanPoints } from './state.js';
-import { renderTasksDashboard, createServiceItemHTML } from './ui.js';
+import { renderTasksDashboard } from './ui.js';
 import { saveTasks } from './data.js';
-import { showNotification, closeCustomServiceModal } from './modals.js';
+import { showNotification, closeCustomServiceModal, showCustomServiceModal, showPdfOptionsModal, closePdfOptionsModal } from './modals.js';
+import { startPresentation, initiatePresentation, closePresentation, showSlide } from './presentation.js';
+import { generatePdf } from './pdf.js';
+
+/**
+ * Initializes all event listeners for the main application.
+ * This function is called after the splash screen is dismissed.
+ */
+export function initializeAppListeners() {
+    // --- MAIN EVENT LISTENERS ---
+    dom.serviceTypeSelect?.addEventListener('change', (e) => toggleSelectionMode(e.target.value));
+    dom.clearSelectionsBtn?.addEventListener('click', clearAllSelections);
+    dom.addTaskButton?.addEventListener('click', handleAddTask);
+    dom.marginPercentageInput?.addEventListener('input', updateSelectedItems);
+    dom.serviceSearchInput?.addEventListener('input', (e) => filterServices(e.target.value));
+    dom.exportPdfBtn?.addEventListener('click', showPdfOptionsModal);
+    
+    dom.clearAllTasksBtn?.addEventListener('click', () => {
+        if (getState().tasks.length > 0 && confirm("¿Estás seguro de que deseas borrar TODAS las tareas?")) {
+            setTasks([]);
+            saveTasks();
+            renderTasksDashboard(); // Update UI
+            resetForm();
+            showNotification('info', 'Tareas Borradas', 'Todas las tareas han sido eliminadas.');
+        }
+    });
+
+    // --- MODAL EVENT LISTENERS ---
+    document.querySelectorAll('.close-notification-btn').forEach(btn => btn.addEventListener('click', dom.notificationModal.classList.add('hidden')));
+    dom.customServiceModal.querySelector('#closeCustomServiceModalBtn')?.addEventListener('click', closeCustomServiceModal);
+    dom.customServiceModal.querySelector('#addCustomServiceBtn')?.addEventListener('click', addCustomServiceToSelection);
+    document.getElementById('showCustomServiceModalBtn')?.addEventListener('click', showCustomServiceModal);
+
+    dom.pdfOptionsModal.querySelector('#closePdfOptionsModalBtn')?.addEventListener('click', closePdfOptionsModal);
+    dom.pdfOptionsModal.querySelector('#generatePdfClientBtn')?.addEventListener('click', () => generatePdf(true));
+    dom.pdfOptionsModal.querySelector('#generatePdfInternalBtn')?.addEventListener('click', () => generatePdf(false));
+    dom.pdfOptionsModal.querySelector('#startPresentationBtn')?.addEventListener('click', startPresentation);
+    document.getElementById('presentProposalBtn')?.addEventListener('click', initiatePresentation);
+
+    // --- PRESENTATION MODAL LISTENERS ---
+    const presentationModal = document.getElementById('presentationModal');
+    presentationModal.querySelector('#presentationCloseBtn')?.addEventListener('click', closePresentation);
+    presentationModal.querySelector('#prevSlideBtn')?.addEventListener('click', () => showSlide('prev'));
+    presentationModal.querySelector('#nextSlideBtn')?.addEventListener('click', () => showSlide('next'));
+    document.addEventListener('keydown', (e) => {
+        if (!presentationModal.classList.contains('hidden')) {
+            if (e.key === 'ArrowRight') showSlide('next');
+            else if (e.key === 'ArrowLeft') showSlide('prev');
+            else if (e.key === 'Escape') closePresentation();
+        }
+    });
+
+    // --- EVENT DELEGATION FOR DYNAMIC CONTENT ---
+    dom.appContainer?.addEventListener('change', (e) => {
+        const target = e.target;
+        if (target.matches('input[name="selectionGroup"], input[data-type="standard"]')) {
+            if (document.querySelector('input[name="monthlyPlanSelection"]:checked')) clearAllSelections();
+            if (target.name === 'selectionGroup') document.querySelectorAll('input[data-type="standard"]').forEach(cb => cb.checked = false);
+            else if (document.querySelector('input[name="selectionGroup"]:checked')) document.querySelector('input[name="selectionGroup"]:checked').checked = false;
+            updateSelectedItems();
+        } else if (target.matches('input[name="monthlyPlanSelection"]')) {
+            if (document.querySelector('input[name="selectionGroup"]:checked')) document.querySelector('input[name="selectionGroup"]:checked').checked = false;
+            document.querySelectorAll('input[data-type="standard"]:checked').forEach(cb => cb.checked = false);
+            handlePlanSelection(target.value);
+            updateSelectedItems();
+        } else if (target.matches('input[name^="plan-service-"]')) {
+            handleServiceSelection(target, target.checked);
+        }
+    });
+
+    dom.appContainer?.addEventListener('click', (e) => {
+        const target = e.target;
+        const card = target.closest('.item-card');
+        if (card && !target.matches('input')) {
+            const input = card.querySelector('input');
+            if (input && !input.disabled) input.click();
+        }
+        const actionButton = target.closest('[data-action]');
+        if (actionButton) {
+            const { action, index, id } = actionButton.dataset;
+            if (action === 'edit') editTask(parseInt(index));
+            else if (action === 'delete') deleteTask(parseInt(index));
+            else if (action === 'remove-custom') removeCustomService(id);
+        }
+    });
+}
+
 
 /**
  * Updates the summary card with the calculated prices and margins.
@@ -258,6 +344,7 @@ export function handleAddTask() {
     showNotification('success', 'Propuesta Guardada', `La propuesta para ${newTask.webName} ha sido guardada.`);
     resetForm();
     saveTasks();
+    renderTasksDashboard(); // Update UI
 }
 
 /**
@@ -324,6 +411,7 @@ export function deleteTask(index) {
     tasks.splice(index, 1);
     setTasks(tasks);
     saveTasks();
+    renderTasksDashboard(); // Update UI
     showNotification('info', 'Propuesta Eliminada', `La propuesta ha sido eliminada.`);
     if (index === editingIndex) resetForm();
 }
