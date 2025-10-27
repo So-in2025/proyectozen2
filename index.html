@@ -171,7 +171,7 @@
             <p class="instructions">Pulsa 'Comenzar' para conocer nuestra propuesta.</p>
             
             <button id="start-button" class="accent-bg styled-button primary-button">▶ COMENZAR PRESENTACIÓN</button>
-            <a href="presupuestador.html" id="skip-presentation-link" target="_top" class="styled-button secondary-button inline-block">Saltar presentación</a>
+            <a href="presupuestador.html" target="_top" id="skip-presentation-link" class="styled-button secondary-button inline-block">Saltar presentación</a>
         </div>
 
         <div id="narration-screen" style="display: none;">
@@ -219,7 +219,7 @@
             <div id="auth-section" class="mt-12">
                 <h3 class="section-heading text-center border-none">ACCESO AL CENTRO DE OPERACIONES</h3>
                 <p class="text-slate-300 text-center mb-6">Tu plataforma de propuestas está lista.</p>
-                <a href="presupuestador.html" id="access-link" target="_top" class="accent-bg inline-block font-bold py-3 px-8 rounded-lg shadow-lg text-lg transition duration-300 hover:scale-105 cursor-pointer" style="text-decoration: none;">🚀 ACCEDER AL CENTRO DE OPERACIONES</a>
+                <a href="presupuestador.html" target="_top" id="access-link" class="accent-bg inline-block font-bold py-3 px-8 rounded-lg shadow-lg text-lg transition duration-300 hover:scale-105 cursor-pointer" style="text-decoration: none;">🚀 ACCEDER AL CENTRO DE OPERACIONES</a>
             </div>
         </div>
     </div>
@@ -228,14 +228,12 @@
     window.addEventListener('load', () => {
         const synth = window.speechSynthesis;
         const startButton = document.getElementById('start-button');
-        const skipLink = document.getElementById('skip-presentation-link');
-        const accessLink = document.getElementById('access-link');
         const introScreen = document.getElementById('intro-screen');
         const narrationScreen = document.getElementById('narration-screen');
         const authSection = document.getElementById('auth-section');
 
-        if (!startButton || !skipLink || !accessLink) {
-            console.error("ERROR CRÍTICO: El botón de inicio o los enlaces de acceso no se encontraron.");
+        if (!startButton) {
+            console.error("ERROR CRÍTICO: El botón de inicio no se encontró.");
             return;
         }
 
@@ -303,14 +301,6 @@
             authSection.style.opacity = 1;
             authSection.scrollIntoView({ behavior: 'smooth' });
         }
-        
-        const navigateToApp = (event) => {
-            event.preventDefault();
-            window.open('presupuestador.html', '_top');
-        };
-
-        skipLink.addEventListener('click', navigateToApp);
-        accessLink.addEventListener('click', navigateToApp);
 
         startButton.addEventListener('click', () => {
             introScreen.style.opacity = '0';
