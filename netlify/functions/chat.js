@@ -1,9 +1,6 @@
 // /netlify/functions/chat.js
 import { GoogleGenAI, Type } from "@google/genai";
 
-// --- CONFIGURATION ---
-const GEMINI_MODEL = "gemini-2.5-flash"; // This can remain at module level as it's a constant.
-
 // --- JSON SCHEMA FOR RECOMMENDATIONS ---
 const recommendationSchema = {
     type: Type.OBJECT,
@@ -44,21 +41,20 @@ const recommendationSchema = {
     required: ["introduction", "services", "closing", "client_questions", "sales_pitch"]
 };
 
-
 // --- HANDLER ---
-// Fix: The handler must be exported at the top level.
 export const handler = async (event) => {
-  // Fix: Check for API_KEY inside the handler function.
+  // CRÍTICO: Verificar la clave API aquí antes de hacer cualquier cosa.
   if (!process.env.API_KEY) {
-    console.error("FATAL: API_KEY environment variable not set.");
+    console.error("FATAL: La variable de entorno API_KEY no está definida.");
     return {
         statusCode: 500,
-        body: JSON.stringify({ error: true, message: "Server function error: API_KEY environment variable is not set." }),
+        body: JSON.stringify({ error: true, message: "Error en la función del servidor: La variable de entorno API_KEY no está configurada." }),
     };
   }
-  // Fix: Initialize GoogleGenAI inside the handler, after checking for API_KEY.
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+  // Inicializar GoogleGenAI DENTRO del handler después de verificar la clave API.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const GEMINI_MODEL = "gemini-2.5-flash"; // Definir el modelo aquí si no es global.
 
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
@@ -66,36 +62,54 @@ export const handler = async (event) => {
 
   try {
     const { userMessage, history: historyForApi, pricingData } = JSON.parse(event.body);
+
     if (!userMessage || !historyForApi || !pricingData) {
-        return { statusCode: 400, body: JSON.stringify({ error: true, message: "Missing userMessage, history, or pricingData." })};
+        return { 
+            statusCode: 400, 
+            body: JSON.stringify({ error: true, message: "Faltan parámetros: userMessage, history o pricingData." })
+        };
     }
 
+    // El historial siempre debe incluir el último mensaje del usuario para la API.
     const historyWithNewMessage = [...historyForApi, { role: 'user', parts: [{ text: userMessage }] }];
 
-    // --- STEP 1: CLASSIFY INTENT ---
+    // --- PASO 1: Clasificación de Intención ---
     const classificationSystemPrompt = `Eres un clasificador de peticiones. Analiza el siguiente mensaje. Tu única respuesta debe ser una de estas dos palabras: 'RECOMENDACION' si la pregunta es para pedir una sugerencia de servicios para un proyecto, o 'TEXTO' para cualquier otra cosa (saludos, preguntas técnicas, etc.). Responde solo con la palabra en mayúsculas.`;
     
+    // Usar la librería de GoogleGenAI
     const classificationResponse = await ai.models.generateContent({
         model: GEMINI_MODEL,
-        contents: historyWithNewMessage,
+        contents: historyWithNewMessage, // Usar el historial completo para la clasificación
         config: { systemInstruction: classificationSystemPrompt }
     });
     
     const intent = classificationResponse.text?.toUpperCase().trim().replace(/['"]+/g, '') || 'TEXTO';
 
-    // --- STEP 2: GENERATE RESPONSE BASED ON INTENT ---
+    // --- PASO 2: Generación de Respuesta Basada en la Intención ---
     let finalResponse;
 
     if (intent === 'RECOMENDACION') {
-        // Use pricingData passed from the frontend
         const serviceList = Object.values(pricingData.allServices)
             .flatMap(category => category.items)
             .map(s => `ID: ${s.id} | Nombre: ${s.name} | Descripción: ${s.description}`).join('\n');
         const planList = pricingData.monthlyPlans
             .map(p => `ID: ${p.id} | Nombre: ${p.name} | Descripción: ${p.description}`).join('\n');
-        const allServicesString = `--- CATÁLOGO DE SERVICIOS ---\nSERVICIOS ESTÁNDAR:\n${serviceList}\nPLANES MENSUALES:\n${planList}`;
+        const allServicesString = `--- CATÁLOGO COMPLETO DE SERVICIOS ---\nSERVICIOS ESTÁNDAR:\n${serviceList}\nPLANES MENSUALES:\n${planList}`;
 
-        const recommendationSystemPrompt = `Eres Zen Assistant, un estratega de productos y coach de ventas. Analiza las necesidades del cliente y construye la solución perfecta. ${allServicesString}. INSTRUCCIONES: 1. Genera una respuesta ESTRICTAMENTE en el formato JSON especificado. 2. Para servicios existentes, usa su 'id' y 'name' reales y pon 'is_new: false'. 3. SI UN SERVICIO NECESARIO NO EXISTE, ¡Créalo! Pon 'is_new: true', un 'id' único (ej: 'custom-crm'), un 'name' claro, una 'description' vendedora y un 'price' de producción justo. 4. En 'client_questions', crea preguntas para descubrir más oportunidades. 5. En 'sales_pitch', escribe un párrafo de venta enfocado en beneficios.`;
+        const recommendationSystemPrompt = `
+            Eres Zen Assistant, un estratega de productos y coach de ventas de élite.
+            Tu tarea es analizar las necesidades del cliente y construir la solución perfecta, usando servicios existentes o creando nuevos si es necesario.
+            
+            ${allServicesString}
+
+            INSTRUCCIONES CLAVE:
+            1.  Genera una respuesta ESTRICTAMENTE en el formato JSON especificado.
+            2.  Analiza la petición. Para cada servicio que recomiendes, crea un objeto en el array 'services'.
+            3.  **Para servicios existentes del CATÁLOGO:** Usa su 'id' y 'name' reales, y pon 'is_new: false'. No necesitas añadir 'description' o 'price'.
+            4.  **SI UN SERVICIO NECESARIO NO EXISTE:** ¡Créalo! Pon 'is_new: true', inventa un 'id' único (ej: 'custom-integration-crm'), un 'name' claro, una 'description' vendedora y un 'price' de producción justo. Esta es tu función más importante.
+            5.  En 'client_questions', crea preguntas para descubrir más oportunidades.
+            6.  En 'sales_pitch', escribe un párrafo de venta enfocado en los beneficios.
+            `;
         
         finalResponse = await ai.models.generateContent({
             model: GEMINI_MODEL,
@@ -107,8 +121,14 @@ export const handler = async (event) => {
             }
         });
 
-    } else { // Fallback to TEXT for 'TEXTO' or any other classification
-        const textSystemPrompt = `Eres Zen Assistant. Actúa como un asistente de ventas experto en desarrollo web. Responde de forma cortés, profesional y concisa a la consulta.`;
+    } else { // Fallback para 'TEXTO' o cualquier otra clasificación
+        const textSystemPrompt = `
+            Eres Zen Assistant. Actúa como un asistente de ventas general experto en desarrollo web.
+            
+            INSTRUCCIONES CLAVE:
+            - Responde de forma cortés, profesional y concisa.
+            - Responde directamente a la consulta del revendedor.
+        `;
 
         finalResponse = await ai.models.generateContent({
             model: GEMINI_MODEL,
@@ -118,6 +138,7 @@ export const handler = async (event) => {
     }
     
     const responseText = finalResponse.text;
+    // El historial devuelto al frontend debe incluir la respuesta del modelo.
     const updatedHistory = [...historyWithNewMessage, { role: 'model', parts: [{ text: responseText }] }];
 
     return { 
@@ -129,10 +150,10 @@ export const handler = async (event) => {
     };
 
   } catch (err) {
-    console.error("Handler Error:", err);
+    console.error("Error en el Handler de Netlify:", err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: true, message: `Server function error: ${err.message}` }),
+      body: JSON.stringify({ error: true, message: `Error en la función del servidor: ${err.message}` }),
     };
   }
 };
