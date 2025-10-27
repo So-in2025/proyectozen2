@@ -121,6 +121,10 @@
         .highlighted .step-number { color: #22D3EE; }
         .highlighted.business-pillar { border-left-color: #22D3EE !important; }
 
+        /* === ESTILOS PANTALLA DE BIENVENIDA === */
+        @keyframes fadeInSplash { from { opacity: 0; } to { opacity: 1; } }
+        #splashScreen { animation: fadeInSplash 0.8s ease-in-out; }
+
     </style>
 <script type="importmap">
 {
@@ -134,8 +138,17 @@
 </head>
 <body class="text-slate-50 min-h-screen">
 
-    <!-- CONTENIDO PRINCIPAL DE LA APP -->
-    <div id="mainAppContainer" class="max-w-screen-2xl mx-auto w-full p-4 sm:p-6 lg:p-8">
+    <!-- SPLASH SCREEN DE BIENVENIDA -->
+    <div id="splashScreen" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-[200] flex-col text-center p-4 transition-opacity duration-700 ease-in-out">
+        <div class="max-w-3xl">
+            <h1 class="text-5xl md:text-7xl font-extrabold accent-color mb-4" style="font-family: 'Orbitron', sans-serif;">Proyecto Zen</h1>
+            <p class="text-xl md:text-2xl text-slate-300 mt-6 max-w-2xl mx-auto">Domina el mercado web sin inversión ni código. <strong>Nosotros desarrollamos, tú ganas.</strong></p>
+            <button id="enterAppBtn" class="mt-12 accent-bg font-bold py-4 px-10 rounded-lg shadow-lg text-lg transition transform hover:scale-105">INGRESAR</button>
+        </div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL DE LA APP (OCULTO INICIALMENTE) -->
+    <div id="mainAppContainer" class="hidden max-w-screen-2xl mx-auto w-full p-4 sm:p-6 lg:p-8">
         <!-- MODALES -->
         <div id="notificationModal" class="hidden fixed inset-0 flex items-center justify-center modal-overlay transition-opacity duration-300">
             <div class="card-bg w-full max-w-sm rounded-xl shadow-2xl overflow-hidden transform transition-all" role="dialog" aria-modal="true">
@@ -289,7 +302,7 @@
             </p>
         </div>
         
-        <div class="max-w-7xl mx-auto px-4">
+        <div id="appContainer" class="max-w-7xl mx-auto px-4">
             <!-- CONTENEDOR DEL CHAT IA -->
             <div class="card-bg p-5 rounded-xl shadow-lg border border-slate-700 flex flex-col h-[500px] mb-8">
                 <div class="flex items-center mb-4">
@@ -312,7 +325,7 @@
             </div>
 
             <!-- Contenedor Principal -->
-            <div id="appContainer" class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 <!-- COLUMNA 1 & 2: Formulario -->
                 <div class="lg:col-span-2 xl:col-span-3 space-y-6">
                     <div class="card-bg p-5 rounded-xl shadow-lg border border-slate-700">

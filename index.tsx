@@ -86,9 +86,7 @@ function showCustomServiceModal() {
     if (document.querySelector('input[name="selectionGroup"]:checked, input[name="monthlyPlanSelection"]:checked')) {
         return showNotification('error', 'Error', 'No puedes añadir ítems personalizados cuando un paquete o plan está seleccionado.');
     }
-    // FIX: Property 'value' does not exist on type 'HTMLElement'.
     (dom.customServiceNameInput as HTMLInputElement).value = '';
-    // FIX: Property 'value' does not exist on type 'HTMLElement'.
     (dom.customServicePriceInput as HTMLInputElement).value = '';
     dom.customServiceModal!.classList.remove('hidden');
 }
@@ -100,9 +98,7 @@ function showPdfOptionsModal() {
 }
 function closePdfOptionsModal() { dom.pdfOptionsModal!.classList.add('hidden'); }
 function addCustomServiceToSelection() {
-    // FIX: Property 'value' does not exist on type 'HTMLElement'.
     const name = (dom.customServiceNameInput as HTMLInputElement).value;
-    // FIX: Property 'value' does not exist on type 'HTMLElement'.
     const price = parseFloat((dom.customServicePriceInput as HTMLInputElement).value);
     if (!name || isNaN(price) || price <= 0) {
         return showNotification('error', 'Datos incompletos', 'Por favor, introduce un nombre y un costo válido.');
@@ -119,7 +115,6 @@ function removeCustomService(id: string) {
     setCustomServices(newCustomServices);
     updateSelectedItems();
 }
-// FIX: Property does not exist on type 'Window & typeof globalThis'.
 (window as any).closeNotificationModal = closeNotificationModal;
 (window as any).closeCustomServiceModal = closeCustomServiceModal;
 (window as any).addCustomServiceToSelection = addCustomServiceToSelection;
@@ -204,9 +199,7 @@ function renderTasksDashboard() {
                     <p class="text-sm font-bold text-green-400">Precio Cliente: $${task.totalClient.toFixed(2)}</p>
                 </div>`;
         }).join('');
-    // FIX: Property 'disabled' does not exist on type 'HTMLElement'.
     (dom.exportPdfBtn as HTMLButtonElement).disabled = tasks.length === 0;
-    // FIX: Property 'disabled' does not exist on type 'HTMLElement'.
     (dom.clearAllTasksBtn as HTMLButtonElement).disabled = tasks.length === 0;
     let grandTotalDev = tasks.reduce((sum, t) => sum + t.totalDev, 0);
     let grandTotalClient = tasks.reduce((sum, t) => sum + t.totalClient, 0);
@@ -230,19 +223,15 @@ function filterServices(searchTerm: string) {
             const description = (item.querySelector('.tooltip-content')?.textContent || '').toLowerCase();
             const isMatch = name.includes(term) || description.includes(term);
             if (isMatch) {
-                // FIX: Property 'style' does not exist on type 'Element'.
                 item.style.display = 'flex';
                 categoryHasVisibleItems = true;
                 hasResults = true;
             } else {
-                // FIX: Property 'style' does not exist on type 'Element'.
                 item.style.display = 'none';
             }
         });
-        // FIX: Property 'style' does not exist on type 'Element'.
         category.style.display = categoryHasVisibleItems ? 'block' : 'none';
     });
-    // FIX: Property 'style' does not exist on type 'Element'.
     (dom.noResultsMessage as HTMLElement).style.display = hasResults ? 'none' : 'block';
 }
 
@@ -251,7 +240,6 @@ function filterServices(searchTerm: string) {
 function updateSummary() {
     let totalDevCost = 0;
     const { selectedServices } = getState();
-    // FIX: Property 'value' does not exist on type 'HTMLElement'.
     const margin = parseFloat((dom.marginPercentageInput as HTMLInputElement).value) / 100 || 0;
     let feedback = '';
     const exclusiveSelection = selectedServices.find(s => s.type === 'package' || s.type === 'plan');
@@ -289,21 +277,16 @@ function updateSummary() {
 function updateSelectedItems() {
     const { customServices } = getState();
     let currentSelected: any[] = [];
-    // FIX: `querySelector` returns `Element | null`. Use generic version for type safety.
     const packageChecked = document.querySelector<HTMLInputElement>('input[name="selectionGroup"]:checked');
     const planChecked = document.querySelector<HTMLInputElement>('input[name="monthlyPlanSelection"]:checked');
     if (packageChecked) {
-        // FIX: dataset properties can be undefined. Use non-null assertion!
         currentSelected.push({ name: packageChecked.dataset.name!, price: parseFloat(packageChecked.dataset.price!), id: packageChecked.value, type: 'package' });
     } else if (planChecked) {
         const { selectedPlanServices } = getState();
-        // FIX: dataset properties can be undefined. Use non-null assertion!
         currentSelected.push({ name: planChecked.dataset.name!, price: parseFloat(planChecked.dataset.price!), id: planChecked.value, type: 'plan' });
         currentSelected.push(...selectedPlanServices);
     } else {
-        // FIX: `querySelectorAll` returns `NodeListOf<Element>`. Use generic version.
         document.querySelectorAll<HTMLInputElement>('input[data-type="standard"]:checked').forEach(el => {
-            // FIX: dataset properties can be undefined. Use non-null assertion!
             currentSelected.push({ name: el.dataset.name!, price: parseFloat(el.dataset.price!), id: el.value, type: 'standard' });
         });
     }
@@ -311,7 +294,6 @@ function updateSelectedItems() {
     setSelectedServices(currentSelected);
     const exclusiveSelection = currentSelected.find(s => s.type === 'package' || s.type === 'plan');
     document.querySelectorAll('.item-card:has([data-type="standard"])').forEach(card => card.classList.toggle('item-disabled', !!exclusiveSelection));
-    // FIX: Property 'disabled' does not exist on type 'Element'.
     (document.querySelector('button[onclick="showCustomServiceModal()"]') as HTMLButtonElement).disabled = !!exclusiveSelection;
     dom.clearSelectionsBtn!.classList.toggle('hidden', currentSelected.length === 0);
     if (exclusiveSelection) {
@@ -334,11 +316,9 @@ function updatePointSystemUI() {
     const { usedPlanPoints, totalPlanPoints } = getState();
     dom.planPointsCounterSpan!.textContent = `${usedPlanPoints} / ${totalPlanPoints}`;
     const remainingPoints = totalPlanPoints - usedPlanPoints;
-    // FIX: `querySelectorAll` returns `NodeListOf<Element>`. Use generic version.
     const allServiceCheckboxes = dom.monthlyServicesContainer!.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
     allServiceCheckboxes.forEach(cb => {
         const servicePointCost = parseInt(cb.dataset.pointCost!);
-        // FIX: Properties 'disabled' and 'checked' do not exist on type 'Element'.
         cb.disabled = !cb.checked && servicePointCost > remainingPoints;
         (cb.closest('.item-card') as HTMLElement).classList.toggle('item-disabled', !cb.checked && servicePointCost > remainingPoints);
     });
@@ -361,7 +341,6 @@ function handlePlanSelection(planId: string, preSelectedIds: string[] = []) {
             </div>`;
     }).join('');
     preSelectedIds.forEach(serviceId => {
-        // FIX: `getElementById` returns `HTMLElement | null`. Cast to `HTMLInputElement`.
         const checkbox = document.getElementById(`plan-service-${serviceId}`) as HTMLInputElement;
         if (checkbox) {
             checkbox.checked = true;
@@ -392,7 +371,6 @@ function handleServiceSelection(checkbox: HTMLInputElement, isChecked: boolean) 
     updateSelectedItems();
 }
 function clearAllSelections() {
-    // FIX: Property 'checked' does not exist on type 'Element'. Use generic querySelectorAll.
     document.querySelectorAll<HTMLInputElement>('input[type="radio"]:checked, input[type="checkbox"]:checked').forEach(el => el.checked = false);
     setCustomServices([]);
     setSelectedPlanId(null);
@@ -404,7 +382,6 @@ function clearAllSelections() {
 }
 function toggleSelectionMode(mode: string) {
     const isMonthly = mode === 'mensual';
-    // FIX: Property 'value' does not exist on type 'HTMLElement'.
     (dom.serviceTypeSelect as HTMLSelectElement).value = mode;
     dom.monthlyPlansContainer!.classList.toggle('hidden', !isMonthly);
     dom.servicesSelectionDiv!.classList.toggle('hidden', isMonthly);
@@ -420,11 +397,8 @@ function handleAddTask() {
     const planSelection = selectedServices.find(s => s.type === 'plan');
     const individualItems = selectedServices.filter(s => s.type === 'standard' || s.type === 'custom');
     let newTask = {
-        // FIX: Property 'value' does not exist on type 'HTMLElement'.
         clientName: (document.getElementById('clientName') as HTMLInputElement).value || 'Sin Cliente',
-        // FIX: Property 'value' does not exist on type 'HTMLElement'.
         webName: (document.getElementById('webName') as HTMLInputElement).value || 'Sin Web',
-        // FIX: Property 'value' does not exist on type 'HTMLElement'.
         margin: parseFloat((dom.marginPercentageInput as HTMLInputElement).value) / 100 || 0,
         totalDev: parseFloat(dom.totalDevPriceSpan!.textContent!),
         totalClient: parseFloat(dom.totalClientPriceSpan!.textContent!),
@@ -437,7 +411,6 @@ function handleAddTask() {
             remainingPoints: totalPlanPoints - usedPlanPoints
         } : null,
         services: individualItems,
-        // FIX: Property 'value' does not exist on type 'HTMLElement'.
         type: (dom.serviceTypeSelect as HTMLSelectElement).value,
     };
     let { tasks } = getState();
@@ -453,13 +426,9 @@ function handleAddTask() {
 }
 function resetForm() {
     setEditingIndex(-1);
-    // FIX: Property 'value' does not exist on type 'HTMLElement'.
     (document.getElementById('clientName') as HTMLInputElement).value = '';
-    // FIX: Property 'value' does not exist on type 'HTMLElement'.
     (document.getElementById('webName') as HTMLInputElement).value = '';
-    // FIX: Property 'value' does not exist on type 'HTMLElement'.
     (dom.serviceTypeSelect as HTMLSelectElement).value = 'puntual';
-    // FIX: Property 'value' does not exist on type 'HTMLElement'.
     (dom.marginPercentageInput as HTMLInputElement).value = '60';
     toggleSelectionMode('puntual');
     clearAllSelections();
@@ -468,29 +437,22 @@ function editTask(index: number) {
     const { tasks } = getState();
     const task = tasks[index];
     setEditingIndex(index);
-    // FIX: Property 'value' does not exist on type 'HTMLElement'.
     (document.getElementById('clientName') as HTMLInputElement).value = task.clientName;
-    // FIX: Property 'value' does not exist on type 'HTMLElement'.
     (document.getElementById('webName') as HTMLInputElement).value = task.webName;
-    // FIX: Property 'value' does not exist on type 'HTMLElement'.
     (dom.marginPercentageInput as HTMLInputElement).value = (task.margin * 100).toFixed(0);
     const selectionType = task.plan ? 'mensual' : 'puntual';
-    // FIX: Property 'value' does not exist on type 'HTMLElement'.
     (dom.serviceTypeSelect as HTMLSelectElement).value = selectionType;
     toggleSelectionMode(selectionType);
     setTimeout(() => {
         clearAllSelections();
         if (task.package) {
-            // FIX: Property 'checked' does not exist on type 'HTMLElement'.
             (document.getElementById(`package-${task.package.id}`) as HTMLInputElement).checked = true;
         } else if (task.plan) {
-            // FIX: Property 'checked' does not exist on type 'HTMLElement'.
             (document.getElementById(`plan-${task.plan.id}`) as HTMLInputElement).checked = true;
             handlePlanSelection(task.plan.id, task.plan.selectedServiceIds);
         } else {
             setCustomServices(task.services.filter((s: any) => s.type === 'custom'));
             task.services.filter((s: any) => s.type === 'standard').forEach((svc: any) => {
-                // FIX: Property 'checked' does not exist on type 'HTMLElement'.
                 const el = document.getElementById(`standard-${svc.id}`) as HTMLInputElement;
                 if (el) el.checked = true;
             });
@@ -541,7 +503,6 @@ function saveTasks() {
 
 // --- PDF GENERATION (from pdf.js) ---
 async function generatePdf(isForClient: boolean) {
-    // FIX: Property 'files' does not exist on type 'HTMLElement'.
     const logoFile = (dom.pdfLogoInput as HTMLInputElement).files?.[0];
     const reader = new FileReader();
     const logoPromise = new Promise((resolve) => {
@@ -553,7 +514,6 @@ async function generatePdf(isForClient: boolean) {
         }
     });
     const logoDataUrl: string | null = await logoPromise as string;
-    // FIX: Property 'jspdf' does not exist on type 'Window & typeof globalThis'.
     const { jsPDF } = (window as any).jspdf;
     const doc = new jsPDF();
     const { tasks, allServices, monthlyPlans } = getState();
@@ -591,7 +551,6 @@ async function generatePdf(isForClient: boolean) {
         }
         doc.setFontSize(9);
         doc.setTextColor('#94A3B8');
-        // FIX: Property 'value' does not exist on type 'HTMLElement'.
         doc.text((dom.pdfResellerInfo as HTMLTextAreaElement).value.split('\n'), rightMargin, y, { align: 'right' });
         y += 20;
         doc.setFontSize(11);
@@ -599,7 +558,6 @@ async function generatePdf(isForClient: boolean) {
         doc.setTextColor('#F8FAFC');
         doc.text("Presupuesto Para:", leftMargin, y);
         doc.setFont('helvetica', 'normal');
-        // FIX: Property 'value' does not exist on type 'HTMLElement'.
         doc.text((dom.pdfClientInfo as HTMLTextAreaElement).value.split('\n'), leftMargin, y + 6);
         doc.setFont('helvetica', 'bold');
         doc.text("Fecha de Emisión:", rightMargin, y, { align: 'right' });
@@ -639,7 +597,6 @@ async function generatePdf(isForClient: boolean) {
             doc.text(`$${task.totalClient.toFixed(2)} USD`, rightMargin, y, { align: 'right' }); y += 20;
             if (index < tasks.length - 1) { doc.setDrawColor('#334155'); doc.line(leftMargin, y - 5, rightMargin, y - 5); }
         });
-        // FIX: Property 'value' does not exist on type 'HTMLElement'.
         const terms = (dom.pdfTerms as HTMLTextAreaElement).value;
         if (terms) {
             checkPageBreak(40);
@@ -660,9 +617,7 @@ async function generatePdf(isForClient: boolean) {
     doc.text("Reporte Interno de Desarrollo", doc.internal.pageSize.width / 2, y, { align: 'center' }); y += 8;
     doc.setFontSize(10); doc.setTextColor('#94A3B8');
     doc.text(`Fecha de Generación: ${new Date().toLocaleString('es-ES')}`, doc.internal.pageSize.width / 2, y, { align: 'center' }); y += 15;
-    // FIX: Property 'value' does not exist on type 'HTMLElement'.
     const resellerInfoText = ((dom.pdfResellerInfo as HTMLTextAreaElement).value || 'No especificado').split('\n');
-    // FIX: Property 'value' does not exist on type 'HTMLElement'.
     const clientInfoText = ((dom.pdfClientInfo as HTMLTextAreaElement).value || 'No especificado').split('\n');
     doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor('#F8FAFC');
     doc.text("Preparado por (Revendedor):", leftMargin, y); doc.setFont('helvetica', 'normal');
@@ -736,7 +691,6 @@ async function generatePdf(isForClient: boolean) {
     showNotification('success', 'PDF Generado', `El reporte interno '${fileName}' ha sido exportado.`);
     closePdfOptionsModal();
 }
-// FIX: Property 'generatePdf' does not exist on type 'Window & typeof globalThis'.
 (window as any).generatePdf = generatePdf;
 
 
@@ -757,9 +711,7 @@ function updateProgressBar() {
     progressBar.style.width = `${percentage}%`;
 }
 function updateNav() {
-    // FIX: Property 'disabled' does not exist on type 'HTMLElement'.
     (document.getElementById('prevSlideBtn') as HTMLButtonElement).disabled = currentSlideIndex === 0;
-    // FIX: Property 'disabled' does not exist on type 'HTMLElement'.
     (document.getElementById('nextSlideBtn') as HTMLButtonElement).disabled = currentSlideIndex === slides.length - 1;
     document.getElementById('slideCounter')!.textContent = `${currentSlideIndex + 1} / ${slides.length}`;
     updateProgressBar();
@@ -846,7 +798,6 @@ function createSlides(brandingInfo: any) {
     return generatedSlides;
 }
 async function startPresentation() {
-    // FIX: Property 'files' does not exist on type 'HTMLElement'.
     const logoFile = (dom.pdfLogoInput as HTMLInputElement).files?.[0];
     const reader = new FileReader();
     const logoPromise = new Promise((resolve) => {
@@ -859,11 +810,8 @@ async function startPresentation() {
     });
     const brandingInfo = {
         logo: await logoPromise,
-        // FIX: Property 'value' does not exist on type 'HTMLElement'.
         reseller: (dom.pdfResellerInfo as HTMLTextAreaElement).value || 'No especificado',
-        // FIX: Property 'value' does not exist on type 'HTMLElement'.
         client: (dom.pdfClientInfo as HTMLTextAreaElement).value || 'No especificado',
-        // FIX: Property 'value' does not exist on type 'HTMLElement'.
         terms: (dom.pdfTerms as HTMLTextAreaElement).value || ''
     };
     slides = createSlides(brandingInfo);
@@ -882,30 +830,9 @@ function initiatePresentation() {
     }
     showPdfOptionsModal();
 }
-document.getElementById('startPresentationBtn')!.addEventListener('click', startPresentation);
-document.getElementById('presentationCloseBtn')!.addEventListener('click', closePresentation);
-document.getElementById('prevSlideBtn')!.addEventListener('click', () => {
-    if (currentSlideIndex > 0) showSlide(currentSlideIndex - 1);
-});
-document.getElementById('nextSlideBtn')!.addEventListener('click', () => {
-    if (currentSlideIndex < slides.length - 1) showSlide(currentSlideIndex + 1);
-});
-document.addEventListener('keydown', (e) => {
-    if (!document.getElementById('presentationModal')!.classList.contains('hidden')) {
-        if (e.key === 'ArrowRight' && currentSlideIndex < slides.length - 1) showSlide(currentSlideIndex + 1);
-        else if (e.key === 'ArrowLeft' && currentSlideIndex > 0) showSlide(currentSlideIndex - 1);
-        else if (e.key === 'Escape') closePresentation();
-    }
-});
 
-// --- AI CHAT FRONTEND (from chat-frontend.js) ---
-// This section is being omitted from the consolidation for brevity and clarity,
-// as it has complex, self-contained logic with TTS. It's assumed to be loaded separately
-// or can be integrated following the same pattern. For this exercise, we focus on the core app logic.
-// In a real scenario, the code from js/chat-frontend.js would be placed here.
-
-// --- MAIN APP INITIALIZATION (from main.js) ---
-document.addEventListener('DOMContentLoaded', () => {
+// --- MAIN APP INITIALIZATION ---
+function initializeApp() {
     // --- INFO MODAL & TTS LOGIC ---
     { // Scoping block for info modal logic
         const infoModal = document.getElementById('infoModal');
@@ -986,6 +913,7 @@ document.addEventListener('DOMContentLoaded', () => {
             processNarrationQueue();
         }
         
+        // Use a delegated event listener on a static parent (body or a modal container)
         document.body.addEventListener('click', (e) => {
             const target = e.target as HTMLElement;
             if (target.id === 'showInfoModalBtn') {
@@ -1005,12 +933,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPricingData();
     loadTasks();
     resetForm();
-    // FIX: Property 'value' does not exist on type 'EventTarget'.
     dom.serviceTypeSelect!.addEventListener('change', (e) => toggleSelectionMode((e.target as HTMLSelectElement).value));
     dom.clearSelectionsBtn!.addEventListener('click', clearAllSelections);
     dom.addTaskButton!.addEventListener('click', handleAddTask);
     dom.marginPercentageInput!.addEventListener('input', updateSelectedItems);
-    // FIX: Property 'value' does not exist on type 'EventTarget'.
     dom.serviceSearchInput!.addEventListener('input', (e) => filterServices((e.target as HTMLInputElement).value));
     document.getElementById('presentProposalBtn')!.addEventListener('click', initiatePresentation);
     dom.clearAllTasksBtn!.addEventListener('click', () => {
@@ -1023,38 +949,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     dom.appContainer!.addEventListener('change', (e) => {
         const target = e.target as HTMLElement;
-        // FIX: Property 'matches' does not exist on type 'EventTarget'.
         if (target.matches('input[name="selectionGroup"], input[data-type="standard"]')) {
             if (document.querySelector('input[name="monthlyPlanSelection"]:checked')) clearAllSelections();
-            // FIX: Property 'name' does not exist on type 'EventTarget'.
             if ((target as HTMLInputElement).name === 'selectionGroup') document.querySelectorAll<HTMLInputElement>('input[data-type="standard"]').forEach(cb => cb.checked = false);
-            // FIX: Property 'checked' does not exist on type 'Element'.
             else if (document.querySelector('input[name="selectionGroup"]:checked')) (document.querySelector('input[name="selectionGroup"]:checked') as HTMLInputElement).checked = false;
             updateSelectedItems();
-        // FIX: Property 'matches' does not exist on type 'EventTarget'.
         } else if (target.matches('input[name="monthlyPlanSelection"]')) {
-            // FIX: Property 'checked' does not exist on type 'Element'.
             if (document.querySelector('input[name="selectionGroup"]:checked')) (document.querySelector('input[name="selectionGroup"]:checked') as HTMLInputElement).checked = false;
-            // FIX: Property 'checked' does not exist on type 'Element'.
             document.querySelectorAll<HTMLInputElement>('input[data-type="standard"]:checked').forEach(cb => cb.checked = false);
-            // FIX: Property 'value' does not exist on type 'EventTarget'.
             handlePlanSelection((target as HTMLInputElement).value);
             updateSelectedItems();
-        // FIX: Property 'matches' does not exist on type 'EventTarget'.
         } else if (target.matches('input[name^="plan-service-"]')) {
-            // FIX: Property 'checked' does not exist on type 'EventTarget'.
             handleServiceSelection(target as HTMLInputElement, (target as HTMLInputElement).checked);
         }
     });
     dom.appContainer!.addEventListener('click', (e) => {
-        // FIX: Property 'closest' does not exist on type 'EventTarget'.
         const card = (e.target as HTMLElement).closest('.item-card');
-        // FIX: Property 'matches' does not exist on type 'EventTarget'.
         if (card && !(e.target as HTMLElement).matches('input')) {
             const input = card.querySelector<HTMLInputElement>('input');
             if (input && !input.disabled) input.click();
         }
-        // FIX: Property 'closest' does not exist on type 'EventTarget'.
         const actionButton = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
         if (actionButton) {
             const { action, index, id } = actionButton.dataset;
@@ -1063,139 +977,162 @@ document.addEventListener('DOMContentLoaded', () => {
             if (action === 'remove-custom') removeCustomService(id!);
         }
     });
-});
-// NOTE: The AI Chat logic from chat-frontend.js has been excluded for this refactoring pass
-// to keep the file focused, but can be integrated similarly.
-// For now, we assume the user wants to keep the chat functionality separate or will ask for its integration later.
-// The existing `js/chat-frontend.js` is still being loaded by `index.html` to maintain functionality.
-// If a single-file build is strictly required, that file's contents would be added here.
 
-// For now, let's keep the chat script in index.html for simplicity of this step.
-// Final check of the logic. It seems the user wants all JS in one file.
-// I will merge the chat-frontend.js as well.
-// The above comment about keeping it separate is part of my thought process, but I will now merge it.
-// --- START OF AI CHAT FRONTEND (from chat-frontend.js) ---
-{ // Scoping block for chat logic
-    const chatMessagesContainer = document.getElementById('chat-messages');
-    const chatInput = document.getElementById('chat-input');
-    const sendChatBtn = document.getElementById('chat-send-btn');
-    const summaryCard = document.getElementById('summaryCard');
-    if (!chatMessagesContainer || !chatInput || !sendChatBtn) {
-        console.error("Chat elements not found, AI Assistant will be disabled.");
-    } else {
-        let chatHistory: any[] = [];
-        let isSending = false;
-        
-        // TTS Manager
-        const ttsManager = { isPlaying: false, stop: function() { window.speechSynthesis.cancel(); this.isPlaying = false; document.querySelectorAll('.tts-btn.playing').forEach(btn => { btn.innerHTML = '▶️ Escuchar'; btn.classList.remove('playing'); });}, speak: function(text: string, buttonElement: HTMLElement) { if (this.isPlaying) return; const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'es-ES'; utterance.rate = 1.05; utterance.pitch = 1; utterance.onstart = () => { this.isPlaying = true; if (buttonElement) { buttonElement.innerHTML = '⏹️ Detener'; buttonElement.classList.add('playing'); }}; utterance.onend = () => { this.isPlaying = false; if (buttonElement) { buttonElement.innerHTML = '▶️ Escuchar'; buttonElement.classList.remove('playing'); }}; window.speechSynthesis.speak(utterance);}};
-        // FIX: Property 'handleTTSButtonClick' does not exist on type 'Window & typeof globalThis'.
-        (window as any).handleTTSButtonClick = (buttonElement: HTMLElement) => { const text = buttonElement.dataset.text!; const isCurrentlyPlayingThis = ttsManager.isPlaying && buttonElement.classList.contains('playing'); ttsManager.stop(); if (!isCurrentlyPlayingThis) { ttsManager.speak(text, buttonElement); }};
-        window.addEventListener('beforeunload', () => ttsManager.stop());
+    // --- START OF AI CHAT FRONTEND ---
+    { 
+        const chatMessagesContainer = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendChatBtn = document.getElementById('chat-send-btn');
+        const summaryCard = document.getElementById('summaryCard');
+        if (!chatMessagesContainer || !chatInput || !sendChatBtn) {
+            console.error("Chat elements not found, AI Assistant will be disabled.");
+        } else {
+            let chatHistory: any[] = [];
+            let isSending = false;
+            
+            const ttsManager = { isPlaying: false, stop: function() { window.speechSynthesis.cancel(); this.isPlaying = false; document.querySelectorAll('.tts-btn.playing').forEach(btn => { (btn as HTMLElement).innerHTML = '▶️ Escuchar'; btn.classList.remove('playing'); });}, speak: function(text: string, buttonElement: HTMLElement) { if (this.isPlaying) return; const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'es-ES'; utterance.rate = 1.05; utterance.pitch = 1; utterance.onstart = () => { this.isPlaying = true; if (buttonElement) { buttonElement.innerHTML = '⏹️ Detener'; buttonElement.classList.add('playing'); }}; utterance.onend = () => { this.isPlaying = false; if (buttonElement) { buttonElement.innerHTML = '▶️ Escuchar'; buttonElement.classList.remove('playing'); }}; window.speechSynthesis.speak(utterance);}};
+            (window as any).handleTTSButtonClick = (buttonElement: HTMLElement) => { const text = buttonElement.dataset.text!; const isCurrentlyPlayingThis = ttsManager.isPlaying && buttonElement.classList.contains('playing'); ttsManager.stop(); if (!isCurrentlyPlayingThis) { ttsManager.speak(text, buttonElement); }};
+            window.addEventListener('beforeunload', () => ttsManager.stop());
 
-        function findServiceById(id: string) {
-            const plan = getState().monthlyPlans.find(p => p.id == id);
-            if (plan) return { type: 'plan', item: plan };
-            // FIX: Property 'items' does not exist on type 'unknown'.
-            const allStandardServices = Object.values(getState().allServices).flatMap((category: any) => category.items);
-            const service = (allStandardServices as any[]).find(s => s.id === id);
-            if (service) {
-                // FIX: Property 'isExclusive' and 'items' does not exist on type 'unknown'.
-                const isPackage = Object.values(getState().allServices).some((cat: any) => cat.isExclusive && cat.items.some((i: any) => i.id === id));
-                return { type: isPackage ? 'package' : (service.pointCost ? 'plan-service' : 'standard'), item: service };
+            function findServiceById(id: string) {
+                const plan = getState().monthlyPlans.find(p => p.id == id);
+                if (plan) return { type: 'plan', item: plan };
+                const allStandardServices = Object.values(getState().allServices).flatMap((category: any) => category.items);
+                const service = (allStandardServices as any[]).find(s => s.id === id);
+                if (service) {
+                    const isPackage = Object.values(getState().allServices).some((cat: any) => cat.isExclusive && cat.items.some((i: any) => i.id === id));
+                    return { type: isPackage ? 'package' : (service.pointCost ? 'plan-service' : 'standard'), item: service };
+                }
+                return null;
+            };
+
+            function addMessageToChat(message: string, role: 'user' | 'ai' | 'model') {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'chat-message flex flex-col my-2';
+                const bubble = document.createElement('div');
+                bubble.className = 'chat-bubble p-3 rounded-lg max-w-[85%] relative';
+                let finalHTML = message.replace(/\n/g, '<br>');
+
+                if (role === 'ai' || role === 'model') {
+                    try {
+                        const json = JSON.parse(message);
+                        let text = `${json.introduction.replace(/\n/g, '<br>')}`;
+                        const applyAllButton = `<button data-action="apply-proposal" data-services='${JSON.stringify(json.services)}' class="apply-proposal-btn bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition mt-2 w-full sm:w-auto">✔️ Aplicar Propuesta</button>`;
+                        text += `<div class="mt-3 pt-3 border-t border-slate-600"><p class="text-sm font-bold text-purple-300 mb-2">Acciones Rápidas:</p><div class="flex flex-wrap gap-2">${applyAllButton}</div></div>`;
+                        if (json.client_questions?.length > 0) {
+                            text += `<div class="mt-3 pt-3 border-t border-slate-600"><p class="text-sm font-bold text-yellow-300 mb-2">Pregúntale a tu Cliente:</p><div class="flex flex-col items-start gap-2">${json.client_questions.map((q: string) => `<button onclick='(document.getElementById("chat-input") as HTMLInputElement).value = "Mi cliente respondió a \\'${q.replace(/"/g, '&quot;').replace(/'/g, '&#39;')}\\', y dijo que..."; document.getElementById("chat-input")!.focus();' class="suggested-question-btn text-left text-sm bg-slate-800 text-slate-300 py-2 px-3 rounded-lg hover:bg-slate-600 transition w-full">❔ ${q}</button>`).join('')}</div></div>`;
+                        }
+                        if (json.sales_pitch) {
+                            const pitchId = `pitch-${Date.now()}`;
+                            text += `<div class="mt-3 pt-3 border-t border-slate-600"><p class="text-sm font-bold text-green-300 mb-2">Argumento de Venta:</p><div class="p-3 bg-slate-800 rounded-lg border border-slate-600 relative"><p id="${pitchId}" class="text-slate-200 text-sm">${json.sales_pitch.replace(/\n/g, '<br>')}</p><button onclick="navigator.clipboard.writeText(document.getElementById('${pitchId}')!.innerText); this.innerText='¡Copiado!';" class="absolute top-2 right-2 text-xs bg-slate-900 text-cyan-300 font-bold py-1 px-2 rounded hover:bg-cyan-800 transition">Copiar</button></div></div>`;
+                        }
+                        finalHTML = text;
+                    } catch(e) {/* it's plain text */}
+                    
+                    const escapedTextToSpeak = message.replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+                    finalHTML += `<button onclick='(window as any).handleTTSButtonClick(this)' data-text='${escapedTextToSpeak}' class="tts-btn absolute bottom-2 right-2 text-xs bg-slate-900 text-cyan-300 font-bold py-1 px-2 rounded hover:bg-cyan-800 transition">▶️ Escuchar</button>`;
+                }
+                if (role === 'user') {
+                    wrapper.classList.add('items-end');
+                    bubble.classList.add('bg-cyan-500', 'text-slate-900', 'rounded-br-none');
+                } else {
+                    wrapper.classList.add('items-start');
+                    bubble.classList.add('bg-slate-700', 'text-slate-50', 'rounded-bl-none');
+                }
+                bubble.innerHTML = finalHTML;
+                wrapper.appendChild(bubble);
+                chatMessagesContainer!.appendChild(wrapper);
+                chatMessagesContainer!.scrollTop = chatMessagesContainer!.scrollHeight;
             }
-            return null;
-        };
 
-        function addMessageToChat(message: string, role: 'user' | 'ai' | 'model') {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'chat-message flex flex-col my-2';
-            const bubble = document.createElement('div');
-            bubble.className = 'chat-bubble p-3 rounded-lg max-w-[85%] relative';
-            let finalHTML = message.replace(/\n/g, '<br>');
-
-            if (role === 'ai' || role === 'model') {
+            async function sendMessage() {
+                ttsManager.stop();
+                const userMessage = (chatInput as HTMLInputElement).value.trim();
+                if (!userMessage || isSending) return;
+                isSending = true; (sendChatBtn as HTMLButtonElement).disabled = true;
+                addMessageToChat(userMessage, 'user');
+                chatHistory.push({ role: 'user', parts: [{ text: userMessage }] });
+                (chatInput as HTMLInputElement).value = '';
+                toggleTypingIndicator(true);
                 try {
-                    const json = JSON.parse(message);
-                    let text = `${json.introduction.replace(/\n/g, '<br>')}`;
-                    const applyAllButton = `<button data-action="apply-proposal" data-services='${JSON.stringify(json.services)}' class="apply-proposal-btn bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition mt-2 w-full sm:w-auto">✔️ Aplicar Propuesta</button>`;
-                    text += `<div class="mt-3 pt-3 border-t border-slate-600"><p class="text-sm font-bold text-purple-300 mb-2">Acciones Rápidas:</p><div class="flex flex-wrap gap-2">${applyAllButton}</div></div>`;
-                    if (json.client_questions?.length > 0) {
-                        text += `<div class="mt-3 pt-3 border-t border-slate-600"><p class="text-sm font-bold text-yellow-300 mb-2">Pregúntale a tu Cliente:</p><div class="flex flex-col items-start gap-2">${json.client_questions.map((q: string) => `<button onclick='(document.getElementById("chat-input") as HTMLInputElement).value = "Mi cliente respondió a \\'${q.replace(/"/g, '&quot;').replace(/'/g, '&#39;')}\\', y dijo que..."; document.getElementById("chat-input")!.focus();' class="suggested-question-btn text-left text-sm bg-slate-800 text-slate-300 py-2 px-3 rounded-lg hover:bg-slate-600 transition w-full">❔ ${q}</button>`).join('')}</div></div>`;
-                    }
-                    if (json.sales_pitch) {
-                        const pitchId = `pitch-${Date.now()}`;
-                        text += `<div class="mt-3 pt-3 border-t border-slate-600"><p class="text-sm font-bold text-green-300 mb-2">Argumento de Venta:</p><div class="p-3 bg-slate-800 rounded-lg border border-slate-600 relative"><p id="${pitchId}" class="text-slate-200 text-sm">${json.sales_pitch.replace(/\n/g, '<br>')}</p><button onclick="navigator.clipboard.writeText(document.getElementById('${pitchId}')!.innerText); this.innerText='¡Copiado!';" class="absolute top-2 right-2 text-xs bg-slate-900 text-cyan-300 font-bold py-1 px-2 rounded hover:bg-cyan-800 transition">Copiar</button></div></div>`;
-                    }
-                    finalHTML = text;
-                } catch(e) {/* it's plain text */}
-                
-                const escapedTextToSpeak = message.replace(/'/g, '&#39;').replace(/"/g, '&quot;');
-                finalHTML += `<button onclick='(window as any).handleTTSButtonClick(this)' data-text='${escapedTextToSpeak}' class="tts-btn absolute bottom-2 right-2 text-xs bg-slate-900 text-cyan-300 font-bold py-1 px-2 rounded hover:bg-cyan-800 transition">▶️ Escuchar</button>`;
+                    const response = await fetch('/.netlify/functions/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userMessage, history: chatHistory }) });
+                    if (!response.ok) { const errorData = await response.json().catch(() => ({})); throw new Error(errorData.message || `Error de red: ${response.status}`); }
+                    const data = await response.json();
+                    chatHistory = data.history;
+                    addMessageToChat(data.response, 'ai');
+                } catch (error: any) {
+                    addMessageToChat(`Lo siento, hubo un error de conexión con el asistente: ${error.message}`, 'ai');
+                } finally {
+                    isSending = false; (sendChatBtn as HTMLButtonElement).disabled = false; toggleTypingIndicator(false);
+                }
             }
-            if (role === 'user') {
-                wrapper.classList.add('items-end');
-                bubble.classList.add('bg-cyan-500', 'text-slate-900', 'rounded-br-none');
-            } else {
-                wrapper.classList.add('items-start');
-                bubble.classList.add('bg-slate-700', 'text-slate-50', 'rounded-bl-none');
+            function toggleTypingIndicator(show: boolean) {
+                let indicator = document.getElementById('typing-indicator');
+                if (show) { if (!indicator) { indicator = document.createElement('div'); indicator.id = 'typing-indicator'; indicator.className = 'chat-message flex items-start my-2'; indicator.innerHTML = `<div class="chat-bubble bg-slate-700 rounded-bl-none p-3 flex items-center space-x-1"><span class="h-2 w-2 bg-slate-400 rounded-full animate-bounce"></span><span class="h-2 w-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.2s;"></span><span class="h-2 w-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.4s;"></span></div>`; chatMessagesContainer!.appendChild(indicator); } }
+                else if (indicator) indicator.remove();
             }
-            bubble.innerHTML = finalHTML;
-            wrapper.appendChild(bubble);
-            chatMessagesContainer!.appendChild(wrapper);
-            chatMessagesContainer!.scrollTop = chatMessagesContainer!.scrollHeight;
-        }
-
-        async function sendMessage() {
-            ttsManager.stop();
-            // FIX: Property 'value' does not exist on type 'HTMLElement'.
-            const userMessage = (chatInput as HTMLInputElement).value.trim();
-            if (!userMessage || isSending) return;
-            // FIX: Property 'disabled' does not exist on type 'HTMLElement'.
-            isSending = true; (sendChatBtn as HTMLButtonElement).disabled = true;
-            addMessageToChat(userMessage, 'user');
-            chatHistory.push({ role: 'user', parts: [{ text: userMessage }] });
-            // FIX: Property 'value' does not exist on type 'HTMLElement'.
-            (chatInput as HTMLInputElement).value = '';
-            toggleTypingIndicator(true);
-            try {
-                const response = await fetch('/.netlify/functions/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userMessage, history: chatHistory }) });
-                if (!response.ok) { const errorData = await response.json().catch(() => ({})); throw new Error(errorData.message || `Error de red: ${response.status}`); }
-                const data = await response.json();
-                chatHistory = data.history;
-                addMessageToChat(data.response, 'ai');
-            } catch (error: any) {
-                addMessageToChat(`Lo siento, hubo un error de conexión con el asistente: ${error.message}`, 'ai');
-            } finally {
-                // FIX: Property 'disabled' does not exist on type 'HTMLElement'.
-                isSending = false; (sendChatBtn as HTMLButtonElement).disabled = false; toggleTypingIndicator(false);
+            function applyAiProposal(services: any[]) {
+                clearAllSelections();
+                const pkg = services.find(s => findServiceById(s.id)?.type === 'package');
+                const plan = services.find(s => findServiceById(s.id)?.type === 'plan');
+                if (pkg) { toggleSelectionMode('puntual'); (document.getElementById(`package-${pkg.id}`) as HTMLElement)?.click(); }
+                else if (plan) { toggleSelectionMode('mensual'); (document.getElementById(`plan-${plan.id}`) as HTMLElement)?.click(); setTimeout(() => { services.forEach(s => { if (s.id !== plan.id) (document.getElementById(`plan-service-${s.id}`) as HTMLElement)?.click(); }); }, 100); }
+                else { toggleSelectionMode('puntual'); services.forEach(s => (document.getElementById(`standard-${s.id}`) as HTMLElement)?.click()); }
+                showNotification('success', 'Propuesta Aplicada', 'Servicios sugeridos por IA seleccionados.');
+                summaryCard!.scrollIntoView({ behavior: 'smooth' });
             }
+            chatMessagesContainer!.addEventListener('click', (e) => {
+                const target = (e.target as HTMLElement).closest<HTMLElement>('[data-action="apply-proposal"]');
+                if (target) applyAiProposal(JSON.parse(target.dataset.services!));
+            });
+            sendChatBtn!.addEventListener('click', sendMessage);
+            chatInput!.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }});
+            
+            chatHistory = [];
+            const welcomeMessage = '¡Hola! Soy Zen Assistant. Describe el proyecto de tu cliente y te ayudaré a seleccionar los servicios.';
+            addMessageToChat(welcomeMessage, 'ai');
+            chatHistory.push({ role: 'model', parts: [{ text: welcomeMessage }] });
         }
-        function toggleTypingIndicator(show: boolean) {
-            let indicator = document.getElementById('typing-indicator');
-            if (show) { if (!indicator) { indicator = document.createElement('div'); indicator.id = 'typing-indicator'; indicator.className = 'chat-message flex items-start my-2'; indicator.innerHTML = `<div class="chat-bubble bg-slate-700 rounded-bl-none p-3 flex items-center space-x-1"><span class="h-2 w-2 bg-slate-400 rounded-full animate-bounce"></span><span class="h-2 w-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.2s;"></span><span class="h-2 w-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.4s;"></span></div>`; chatMessagesContainer!.appendChild(indicator); } }
-            else if (indicator) indicator.remove();
-        }
-        function applyAiProposal(services: any[]) {
-            clearAllSelections();
-            const pkg = services.find(s => findServiceById(s.id)?.type === 'package');
-            const plan = services.find(s => findServiceById(s.id)?.type === 'plan');
-            if (pkg) { toggleSelectionMode('puntual'); document.getElementById(`package-${pkg.id}`)?.click(); }
-            else if (plan) { toggleSelectionMode('mensual'); document.getElementById(`plan-${plan.id}`)?.click(); setTimeout(() => { services.forEach(s => { if (s.id !== plan.id) document.getElementById(`plan-service-${s.id}`)?.click(); }); }, 100); }
-            else { toggleSelectionMode('puntual'); services.forEach(s => document.getElementById(`standard-${s.id}`)?.click()); }
-            showNotification('success', 'Propuesta Aplicada', 'Servicios sugeridos por IA seleccionados.');
-            summaryCard!.scrollIntoView({ behavior: 'smooth' });
-        }
-        chatMessagesContainer!.addEventListener('click', (e) => {
-            // FIX: Property 'closest' does not exist on type 'EventTarget'.
-            const target = (e.target as HTMLElement).closest<HTMLElement>('[data-action="apply-proposal"]');
-            if (target) applyAiProposal(JSON.parse(target.dataset.services!));
-        });
-        sendChatBtn!.addEventListener('click', sendMessage);
-        chatInput!.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }});
-        
-        chatHistory = [];
-        const welcomeMessage = '¡Hola! Soy Zen Assistant. Describe el proyecto de tu cliente y te ayudaré a seleccionar los servicios.';
-        addMessageToChat(welcomeMessage, 'ai');
-        chatHistory.push({ role: 'model', parts: [{ text: welcomeMessage }] });
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const splashScreen = document.getElementById('splashScreen');
+    const mainAppContainer = document.getElementById('mainAppContainer');
+    const enterAppBtn = document.getElementById('enterAppBtn');
+
+    // Presentation Mode Listeners (attached once)
+    document.getElementById('startPresentationBtn')!.addEventListener('click', startPresentation);
+    document.getElementById('presentationCloseBtn')!.addEventListener('click', closePresentation);
+    document.getElementById('prevSlideBtn')!.addEventListener('click', () => {
+        if (currentSlideIndex > 0) showSlide(currentSlideIndex - 1);
+    });
+    document.getElementById('nextSlideBtn')!.addEventListener('click', () => {
+        if (currentSlideIndex < slides.length - 1) showSlide(currentSlideIndex + 1);
+    });
+    document.addEventListener('keydown', (e) => {
+        if (!document.getElementById('presentationModal')!.classList.contains('hidden')) {
+            if (e.key === 'ArrowRight' && currentSlideIndex < slides.length - 1) showSlide(currentSlideIndex + 1);
+            else if (e.key === 'ArrowLeft' && currentSlideIndex > 0) showSlide(currentSlideIndex - 1);
+            else if (e.key === 'Escape') closePresentation();
+        }
+    });
+
+    if (sessionStorage.getItem('splashShown')) {
+        splashScreen!.style.display = 'none';
+        mainAppContainer!.classList.remove('hidden');
+        initializeApp(); // Initialize app directly
+    } else {
+        enterAppBtn!.addEventListener('click', () => {
+            sessionStorage.setItem('splashShown', 'true');
+            splashScreen!.classList.add('opacity-0');
+            
+            splashScreen!.addEventListener('transitionend', () => {
+                splashScreen!.style.display = 'none';
+            }, { once: true });
+            
+            mainAppContainer!.classList.remove('hidden');
+            initializeApp(); // Initialize app after splash
+        });
+    }
+});
