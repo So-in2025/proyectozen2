@@ -148,10 +148,64 @@
         </div>
     </div>
 
+    <!-- MODAL INFORMATIVO "PROYECTO ZEN" - MOVING OUT OF mainAppContainer -->
+    <div id="infoModal" class="hidden fixed inset-0 flex items-center justify-center modal-overlay transition-opacity duration-300 z-[210]">
+        <div class="card-bg w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden transform transition-all" role="dialog" aria-modal="true">
+            <div class="modal-header p-4 rounded-t-xl text-white font-bold bg-slate-700 flex justify-between items-center">
+                <h3 class="text-lg">Nuestro Modelo de Negocio: Proyecto Zen</h3>
+                <button id="infoModalCloseBtn" class="text-2xl font-bold hover:text-slate-200">&times;</button>
+            </div>
+            <div id="narration-screen" class="p-6 max-h-[70vh] overflow-y-auto space-y-8">
+                <div class="text-center mb-6">
+                    <button id="playInfoNarrationBtn" class="accent-bg font-bold py-2 px-6 rounded-lg shadow-md transition transform hover:scale-105">
+                        ▶️ Escuchar Presentación
+                    </button>
+                </div>
+                
+                <div class="mb-10">
+                    <h3 class="section-heading">La Oportunidad: Los 3 Pilares del Negocio</h3>
+                    <div id="pillar-1" class="business-pillar">
+                        <p><span class="vocal-highlight">Primero: Tu rol es estratégico, no técnico. La IA te ayuda a analizar las necesidades del cliente y a elegir la mejor solución. Tu te enfocas en la relación y la negociación.</span></p>
+                    </div>
+                    <div id="pillar-2" class="business-pillar">
+                        <p><span class="vocal-highlight">Segundo: Tienes control total sobre la ganancia. Te mostramos nuestro costo de producción, y tú decides el porcentaje de ganancia.</span></p>
+                    </div>
+                    <div id="pillar-3" class="business-pillar">
+                        <p><span class="vocal-highlight">Tercero: Somos tu equipo de desarrollo invisible. Operamos como tu marca blanca para construir y entregar todo el proyecto.</span></p>
+                    </div>
+                </div>
+    
+                <div>
+                    <h3 class="section-heading">El Proceso: Tu Flujo de Trabajo en 5 Pasos</h3>
+                    <div id="step-1" class="workflow-step">
+                        <div class="step-number">01</div>
+                        <p><span class="vocal-highlight">Paso uno: Nuestro asistente de inteligencia artificial te ayuda a elegir los servicios que tu cliente necesita y te asistirá para cerrar las ventas.</span></p>
+                    </div>
+                    <div id="step-2" class="workflow-step">
+                        <div class="step-number">02</div>
+                        <p><span class="vocal-highlight">Paso dos: Defines tu margen de ganancia sobre nuestro costo. El sistema calcula el precio final para tu cliente automáticamente.</span></p>
+                    </div>
+                     <div id="step-3" class="workflow-step">
+                        <div class="step-number">03</div>
+                        <p><span class="vocal-highlight">Paso tres: Generas un PDF con tu propia marca y se lo envías a tu cliente para cerrar el trato.</span></p>
+                    </div>
+                    <div id="step-4" class="workflow-step">
+                        <div class="step-number">04</div>
+                        <p><span class="vocal-highlight">Paso cuatro, Le cobrás a tu cliente el 50% de anticipo. Con ese dinero, ya tenés tu primera ganancia en el bolsillo y los fondos para el desarrollo.</span></p>
+                    </div>
+                    <div id="step-5" class="workflow-step">
+                        <div class="step-number">05</div>
+                        <p><span class="vocal-highlight">Paso cinco, Nos entregas 50% (costo de desarrollo) para iniciar, el resto al entregar el proyecto a tu cliente.</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- CONTENIDO PRINCIPAL DE LA APP (OCULTO INICIALMENTE) -->
     <div id="mainAppContainer" class="hidden max-w-screen-2xl mx-auto w-full p-4 sm:p-6 lg:p-8">
         <!-- MODALES -->
-        <div id="notificationModal" class="hidden fixed inset-0 flex items-center justify-center modal-overlay transition-opacity duration-300">
+        <div id="notificationModal" class="fixed inset-0 flex items-center justify-center modal-overlay transition-opacity duration-300 hidden">
             <div class="card-bg w-full max-w-sm rounded-xl shadow-2xl overflow-hidden transform transition-all" role="dialog" aria-modal="true">
                 <div class="modal-header p-4 rounded-t-xl text-white font-bold flex justify-between items-center">
                     <h3 id="notificationTitle" class="text-lg"></h3>
@@ -238,61 +292,6 @@
             </div>
         </div>
 
-        <!-- MODAL INFORMATIVO "PROYECTO ZEN" -->
-        <div id="infoModal" class="hidden fixed inset-0 flex items-center justify-center modal-overlay transition-opacity duration-300 z-[210]">
-            <div class="card-bg w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden transform transition-all" role="dialog" aria-modal="true">
-                <div class="modal-header p-4 rounded-t-xl text-white font-bold bg-slate-700 flex justify-between items-center">
-                    <h3 class="text-lg">Nuestro Modelo de Negocio: Proyecto Zen</h3>
-                    <button id="infoModalCloseBtn" class="text-2xl font-bold hover:text-slate-200">&times;</button>
-                </div>
-                <div id="narration-screen" class="p-6 max-h-[70vh] overflow-y-auto space-y-8">
-                    <div class="text-center mb-6">
-                        <button id="playInfoNarrationBtn" class="accent-bg font-bold py-2 px-6 rounded-lg shadow-md transition transform hover:scale-105">
-                            ▶️ Escuchar Presentación
-                        </button>
-                    </div>
-                    
-                    <div class="mb-10">
-                        <h3 class="section-heading">La Oportunidad: Los 3 Pilares del Negocio</h3>
-                        <div id="pillar-1" class="business-pillar">
-                            <p><span class="vocal-highlight">Primero: Tu rol es estratégico, no técnico. La IA te ayuda a analizar las necesidades del cliente y a elegir la mejor solución. Tu te enfocas en la relación y la negociación.</span></p>
-                        </div>
-                        <div id="pillar-2" class="business-pillar">
-                            <p><span class="vocal-highlight">Segundo: Tienes control total sobre la ganancia. Te mostramos nuestro costo de producción, y tú decides el porcentaje de ganancia.</span></p>
-                        </div>
-                        <div id="pillar-3" class="business-pillar">
-                            <p><span class="vocal-highlight">Tercero: Somos tu equipo de desarrollo invisible. Operamos como tu marca blanca para construir y entregar todo el proyecto.</span></p>
-                        </div>
-                    </div>
-        
-                    <div>
-                        <h3 class="section-heading">El Proceso: Tu Flujo de Trabajo en 5 Pasos</h3>
-                        <div id="step-1" class="workflow-step">
-                            <div class="step-number">01</div>
-                            <p><span class="vocal-highlight">Paso uno: Nuestro asistente de inteligencia artificial te ayuda a elegir los servicios que tu cliente necesita y te asistirá para cerrar las ventas.</span></p>
-                        </div>
-                        <div id="step-2" class="workflow-step">
-                            <div class="step-number">02</div>
-                            <p><span class="vocal-highlight">Paso dos: Defines tu margen de ganancia sobre nuestro costo. El sistema calcula el precio final para tu cliente automáticamente.</span></p>
-                        </div>
-                         <div id="step-3" class="workflow-step">
-                            <div class="step-number">03</div>
-                            <p><span class="vocal-highlight">Paso tres: Generas un PDF con tu propia marca y se lo envías a tu cliente para cerrar el trato.</span></p>
-                        </div>
-                        <div id="step-4" class="workflow-step">
-                            <div class="step-number">04</div>
-                            <p><span class="vocal-highlight">Paso cuatro, Le cobrás a tu cliente el 50% de anticipo. Con ese dinero, ya tenés tu primera ganancia en el bolsillo y los fondos para el desarrollo.</span></p>
-                        </div>
-                        <div id="step-5" class="workflow-step">
-                            <div class="step-number">05</div>
-                            <p><span class="vocal-highlight">Paso cinco, Nos entregas 50% (costo de desarrollo) para iniciar, el resto al entregar el proyecto a tu cliente.</span></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
         <!-- TÍTULO PRINCIPAL Y CONTEXTO -->
         <div class="max-w-7xl mx-auto text-center mb-8 px-4">
             <h1 class="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">
@@ -308,19 +307,25 @@
             <div class="card-bg p-5 rounded-xl shadow-lg border border-slate-700 flex flex-col h-[500px] mb-8">
                 <div class="flex items-center mb-4">
                     <h2 class="text-2xl font-semibold text-purple-400">Asistente IA de Ventas</h2>
-                    <span class="ml-3 h-3 w-3 bg-green-400 rounded-full animate-pulse"></span>
+                    <span id="chat-status-indicator" class="ml-3 h-3 w-3 bg-green-400 rounded-full animate-pulse"></span>
                 </div>
                 
                 <div id="chat-messages" class="flex-grow space-y-4 overflow-y-auto p-2 bg-slate-900/50 rounded-lg border border-slate-700">
                     <!-- Los mensajes del chat aparecerán aquí dinámicamente -->
                 </div>
 
-                <div class="flex items-center gap-2 pt-4 border-t border-slate-700">
+                <div class="flex items-center gap-2 pt-4 border-t border-slate-700 relative">
                     <input type="text" id="chat-input" class="w-full styled-input" placeholder="Ej: 'Necesito una web para un fotógrafo que quiere mostrar su trabajo y vender copias online'">
-                    <button id="chat-send-btn" class="accent-bg font-bold p-3 rounded-lg shadow-md transition duration-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                    <button id="chat-send-btn" class="accent-bg font-bold p-3 rounded-lg shadow-md transition duration-300 flex items-center justify-center w-12 h-12">
+                        <svg id="send-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
                             <path d="M3.105 2.289a.75.75 0 00-.826.95l1.414 4.949a.75.75 0 00.95.546l4.209-1.202a.75.75 0 01.531 1.343l-4.21 1.202a.75.75 0 00-.95.546l-1.414 4.95a.75.75 0 00.826.95L19 10.354a.75.75 0 000-1.418L3.105 2.289z" />
                         </svg>
+                        <div id="chat-loading-spinner" class="hidden">
+                            <svg class="animate-spin h-5 w-5 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
                     </button>
                 </div>
             </div>

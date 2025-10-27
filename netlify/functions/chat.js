@@ -1,7 +1,5 @@
 // /netlify/functions/chat.js
 import { GoogleGenAI, Type } from "@google/genai";
-import fs from 'fs';
-import path from 'path';
 
 // --- CONFIGURATION ---
 // Fix: Use process.env.API_KEY as per the coding guidelines.
@@ -58,23 +56,10 @@ export const handler = async (event) => {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
-  let pricingData;
   try {
-    // Correct path to read pricing.json from the project root in a Netlify function environment
-    const pricingPath = path.join(process.cwd(), 'pricing.json');
-    pricingData = JSON.parse(fs.readFileSync(pricingPath, 'utf8'));
-  } catch (err) {
-    console.error("CRITICAL ERROR: Could not read or parse pricing.json", err);
-    return {
-        statusCode: 500,
-        body: JSON.stringify({ error: true, message: 'Server error: could not load pricing configuration.' })
-    };
-  }
-
-  try {
-    const { userMessage, history: historyForApi } = JSON.parse(event.body);
-    if (!userMessage || !historyForApi) {
-        return { statusCode: 400, body: JSON.stringify({ error: true, message: "Missing userMessage or history." })};
+    const { userMessage, history: historyForApi, pricingData } = JSON.parse(event.body);
+    if (!userMessage || !historyForApi || !pricingData) {
+        return { statusCode: 400, body: JSON.stringify({ error: true, message: "Missing userMessage, history, or pricingData." })};
     }
 
     const historyWithNewMessage = [...historyForApi, { role: 'user', parts: [{ text: userMessage }] }];
@@ -94,6 +79,7 @@ export const handler = async (event) => {
     let finalResponse;
 
     if (intent === 'RECOMENDACION') {
+        // Use pricingData passed from the frontend
         const serviceList = Object.values(pricingData.allServices)
             .flatMap(category => category.items)
             .map(s => `ID: ${s.id} | Nombre: ${s.name} | Descripción: ${s.description}`).join('\n');

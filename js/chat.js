@@ -1,9 +1,14 @@
 // --- CHATBOT LOGIC ---
+import { getState } from './state.js';
 
 export function initChat() {
     const chatMessagesContainer = document.getElementById('chat-messages');
     const chatInput = document.getElementById('chat-input');
     const sendChatBtn = document.getElementById('chat-send-btn');
+    const sendIcon = document.getElementById('send-icon');
+    const loadingSpinner = document.getElementById('chat-loading-spinner');
+    const chatStatusIndicator = document.getElementById('chat-status-indicator');
+
     let chatHistory = [];
     let isSending = false;
 
@@ -20,9 +25,32 @@ export function initChat() {
                 // Attempt to parse AI response as JSON for structured content
                 const jsonResponse = JSON.parse(message);
                 if (jsonResponse.introduction && Array.isArray(jsonResponse.services)) {
-                    let messageText = `${jsonResponse.introduction.replace(/\n/g, '<br>')}`;
-                     if (jsonResponse.closing) messageText += `<br><br>${jsonResponse.closing.replace(/\n/g, '<br>')}`;
-                    finalHTML = messageText;
+                    let recommendationHtml = `<p>${jsonResponse.introduction.replace(/\n/g, '<br>')}</p>`;
+
+                    recommendationHtml += `<h4 class="text-lg font-semibold mt-4 mb-2 text-purple-300">Servicios Recomendados:</h4><ul class="list-disc list-inside space-y-1 text-slate-200">`;
+                    jsonResponse.services.forEach(svc => {
+                        if (svc.is_new) {
+                            recommendationHtml += `<li><strong>⭐ ${svc.name}</strong> (ID: ${svc.id}): ${svc.description} - Costo Prod: $${svc.price ? svc.price.toFixed(2) : 'N/A'}</li>`;
+                        } else {
+                            recommendationHtml += `<li><strong>✔️ ${svc.name}</strong> (ID: ${svc.id})</li>`;
+                        }
+                    });
+                    recommendationHtml += `</ul>`;
+
+                    if (jsonResponse.sales_pitch) {
+                        recommendationHtml += `<h4 class="text-lg font-semibold mt-4 mb-2 text-purple-300">Argumento de Venta para tu Cliente:</h4><p class="italic text-slate-300">${jsonResponse.sales_pitch.replace(/\n/g, '<br>')}</p>`;
+                    }
+
+                    if (jsonResponse.client_questions && jsonResponse.client_questions.length > 0) {
+                        recommendationHtml += `<h4 class="text-lg font-semibold mt-4 mb-2 text-purple-300">Preguntas Clave para tu Cliente:</h4><ul class="list-disc list-inside space-y-1 text-slate-200">`;
+                        jsonResponse.client_questions.forEach(q => {
+                            recommendationHtml += `<li>${q}</li>`;
+                        });
+                        recommendationHtml += `</ul>`;
+                    }
+
+                    recommendationHtml += `<p class="mt-4">${jsonResponse.closing.replace(/\n/g, '<br>')}</p>`;
+                    finalHTML = recommendationHtml;
                 }
             } catch (e) { /* Not a JSON response, render as plain text */ }
         }
@@ -46,10 +74,20 @@ export function initChat() {
         
         isSending = true;
         sendChatBtn.disabled = true;
+        sendIcon.classList.add('hidden');
+        loadingSpinner.classList.remove('hidden');
+        if (chatStatusIndicator) chatStatusIndicator.classList.remove('bg-green-400', 'animate-pulse');
+        if (chatStatusIndicator) chatStatusIndicator.classList.add('bg-yellow-400'); // Indicate thinking
+
         addMessageToChat(userMessage, 'user');
         
-        // Prepare payload for the Netlify function
-        const payload = { userMessage: userMessage, history: chatHistory };
+        // Prepare payload for the Netlify function, including pricingData
+        const { allServices, monthlyPlans } = getState();
+        const payload = { 
+            userMessage: userMessage, 
+            history: chatHistory,
+            pricingData: { allServices, monthlyPlans } 
+        };
         
         // Optimistically update local history for the UI
         chatHistory.push({ role: 'user', parts: [{ text: userMessage }] }); 
@@ -84,6 +122,10 @@ export function initChat() {
         } finally {
             isSending = false;
             sendChatBtn.disabled = false;
+            sendIcon.classList.remove('hidden');
+            loadingSpinner.classList.add('hidden');
+            if (chatStatusIndicator) chatStatusIndicator.classList.remove('bg-yellow-400');
+            if (chatStatusIndicator) chatStatusIndicator.classList.add('bg-green-400', 'animate-pulse'); // Back to active
         }
     }
     

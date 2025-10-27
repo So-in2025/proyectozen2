@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Attach listener for entering the main application
     if (enterAppBtn) {
         enterAppBtn.addEventListener('click', () => {
+            console.log('Botón INGRESAR clickeado.'); // Added for debugging
             sessionStorage.setItem('splashSeen', 'true');
             if (splashScreen) {
                 splashScreen.style.opacity = '0';
@@ -64,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Attach listeners for the info modal, which is controlled from the splash screen
     if (showInfoModelBtn) {
         showInfoModelBtn.addEventListener('click', () => {
+            console.log('Botón "¿De qué se trata este modelo?" clickeado.'); // Added for debugging
             if (infoModal) infoModal.classList.remove('hidden');
         });
     } else {

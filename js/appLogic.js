@@ -30,7 +30,8 @@ export function initializeAppListeners() {
     });
 
     // --- MODAL EVENT LISTENERS ---
-    document.querySelectorAll('.close-notification-btn').forEach(btn => btn.addEventListener('click', dom.notificationModal.classList.add('hidden')));
+    // FIX: Correctly assign event listener for close notification buttons
+    document.querySelectorAll('.close-notification-btn').forEach(btn => btn.addEventListener('click', () => dom.notificationModal.classList.add('hidden')));
     dom.customServiceModal.querySelector('#closeCustomServiceModalBtn')?.addEventListener('click', closeCustomServiceModal);
     dom.customServiceModal.querySelector('#addCustomServiceBtn')?.addEventListener('click', addCustomServiceToSelection);
     document.getElementById('showCustomServiceModalBtn')?.addEventListener('click', showCustomServiceModal);
