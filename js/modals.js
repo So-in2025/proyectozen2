@@ -58,6 +58,9 @@ export function playInfoNarration() {
     function processNarrationQueue() {
         if (narrationQueue.length === 0) {
             if (lastHighlightedPoint) lastHighlightedPoint.classList.add('highlighted');
+            // Reset the play button text
+            const playBtn = document.getElementById('playInfoNarrationBtn');
+            if (playBtn) playBtn.innerHTML = '▶️ Escuchar Presentación';
             return;
         }
 
@@ -73,7 +76,7 @@ export function playInfoNarration() {
         }
 
         const utterance = new SpeechSynthesisUtterance(textToSpeak);
-        utterance.lang = 'es-US';
+        utterance.lang = 'es-ES'; // Set to Spanish
         utterance.rate = 1.1;
         utterance.onstart = () => elementToSpeak.classList.add('speaking');
         utterance.onend = () => {
@@ -82,9 +85,34 @@ export function playInfoNarration() {
         };
         utterance.onerror = (e) => {
             console.error("Error en TTS:", e);
+            showNotification('error', 'Error de Voz', 'No se pudo reproducir la narración. Tu navegador o sistema puede no tener voces en español disponibles.');
             document.querySelectorAll('.business-pillar, .workflow-step').forEach(el => el.classList.add('highlighted'));
+            // Ensure the play button state is reset even on error
+            const playBtn = document.getElementById('playInfoNarrationBtn');
+            if (playBtn) playBtn.innerHTML = '▶️ Escuchar Presentación';
         };
-        synth.speak(utterance);
+
+        try {
+            // Find a Spanish voice if available
+            const spanishVoices = synth.getVoices().filter(voice => voice.lang.startsWith('es-'));
+            if (spanishVoices.length > 0) {
+                // Prioritize a Google voice if available, otherwise use the first Spanish voice
+                utterance.voice = spanishVoices.find(voice => voice.name.includes('Google')) || spanishVoices[0];
+            } else {
+                console.warn("No se encontraron voces en español. Usando la voz por defecto del sistema.");
+            }
+            synth.speak(utterance);
+            // Update the play button text to indicate active narration
+            const playBtn = document.getElementById('playInfoNarrationBtn');
+            if (playBtn) playBtn.innerHTML = '⏹️ Detener Narración';
+
+        } catch (error) {
+            console.error("Error al intentar iniciar TTS:", error);
+            showNotification('error', 'Error de Voz', 'No se pudo iniciar la narración. Tu navegador puede estar bloqueando la API de voz.');
+            // Ensure the play button state is reset on immediate error
+            const playBtn = document.getElementById('playInfoNarrationBtn');
+            if (playBtn) playBtn.innerHTML = '▶️ Escuchar Presentación';
+        }
     }
     processNarrationQueue();
 }

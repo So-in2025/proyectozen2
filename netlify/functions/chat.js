@@ -44,16 +44,16 @@ const recommendationSchema = {
 // --- HANDLER ---
 export const handler = async (event) => {
   // CRÍTICO: Verificar la clave API aquí antes de hacer cualquier cosa.
-  if (!process.env.API_KEY) {
-    console.error("FATAL: La variable de entorno API_KEY no está definida.");
+  if (!process.env.GEMINI_APIKEY) {
+    console.error("FATAL: La variable de entorno GEMINI_APIKEY no está definida.");
     return {
         statusCode: 500,
-        body: JSON.stringify({ error: true, message: "Error en la función del servidor: La variable de entorno API_KEY no está configurada." }),
+        body: JSON.stringify({ error: true, message: "Error en la función del servidor: La variable de entorno GEMINI_APIKEY no está configurada." }),
     };
   }
 
   // Inicializar GoogleGenAI DENTRO del handler después de verificar la clave API.
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_APIKEY });
   const GEMINI_MODEL = "gemini-2.5-flash"; // Definir el modelo aquí si no es global.
 
   if (event.httpMethod !== "POST") {
